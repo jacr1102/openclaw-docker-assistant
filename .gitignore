@@ -1,0 +1,8 @@
+# Local OpenClaw source (cloned by bootstrap; do not commit)
+upstream/
+
+# Persisted config, credentials, and workspace on the host
+data/
+
+# macOS
+.DS_Store
