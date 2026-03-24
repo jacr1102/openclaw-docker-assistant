@@ -4,7 +4,7 @@ This repo includes **`docker-compose.prod.yml`**: same idea as digital-message-p
 
 ## Example hostnames in `deploy/`
 
-Sample files (e.g. [`nginx-assistant.dhalia.fun.conf.example`](./nginx-assistant.dhalia.fun.conf.example)) use **`assistant.dhalia.fun`** only as an **illustration** for DNS, TLS, Nginx `server_name`, and `gateway.controlUi.allowedOrigins`. Replace it with **your** real domain when you copy configs. Nothing in OpenClaw requires that hostname to appear in git—it is documentation and examples only.
+[`nginx-openclaw.https.example.conf`](./nginx-openclaw.https.example.conf) uses **`openclaw.example.com`** (reserved for documentation) for DNS, TLS, Nginx `server_name`, and `gateway.controlUi.allowedOrigins`. Replace it with **your** real domain when you copy configs.
 
 ## What the pipeline does (`.github/workflows/deploy.yml`)
 
@@ -63,7 +63,7 @@ docker compose -f docker-compose.prod.yml down
 
 ## Nginx reverse proxy (HTTPS)
 
-Example for **`assistant.dhalia.fun`** → `127.0.0.1:18789` (WebSocket-friendly): [`nginx-assistant.dhalia.fun.conf.example`](./nginx-assistant.dhalia.fun.conf.example). Add a DNS **A** record for `assistant.dhalia.fun`, install the snippet under `/etc/nginx/sites-available/`, enable the site, run **Certbot** for TLS, then `nginx -t` and reload.
+Example: **`openclaw.example.com`** → `127.0.0.1:18789` (WebSocket-friendly): [`nginx-openclaw.https.example.conf`](./nginx-openclaw.https.example.conf). Add a DNS **A** record for your hostname, install the snippet under `/etc/nginx/sites-available/`, enable the site, run **Certbot** for TLS, then `nginx -t` and reload.
 
 ### Control UI: `allowedOrigins` (required behind Nginx + HTTPS)
 
@@ -75,7 +75,7 @@ the gateway is bound to **`lan`** (see `OPENCLAW_GATEWAY_BIND`) and the Control 
 
 ```json
 "controlUi": {
-  "allowedOrigins": ["https://assistant.dhalia.fun"]
+  "allowedOrigins": ["https://openclaw.example.com"]
 }
 ```
 
