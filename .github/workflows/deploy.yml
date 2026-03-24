@@ -76,11 +76,18 @@ jobs:
             set -e
             DEPLOY_PATH="${{ secrets.DEPLOY_PATH }}"
             cd "$DEPLOY_PATH"
+            if [ ! -f .env.prod ]; then
+              echo "ERROR: $DEPLOY_PATH/.env.prod is missing."
+              echo "Create it on the server (copy deploy/env.prod.example) with absolute paths for OPENCLAW_CONFIG_DIR and OPENCLAW_WORKSPACE_DIR."
+              exit 1
+            fi
             REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
             export IMAGE_OPENCLAW="ghcr.io/${REPO_LOWER}/openclaw:latest"
             echo "IMAGE_OPENCLAW=$IMAGE_OPENCLAW" > .env
-            if [ -f .env.prod ]; then
-              grep -v '^IMAGE_OPENCLAW=' .env.prod >> .env || true
+            grep -v '^IMAGE_OPENCLAW=' .env.prod >> .env || true
+            if ! grep -qE '^OPENCLAW_CONFIG_DIR=.+' .env || ! grep -qE '^OPENCLAW_WORKSPACE_DIR=.+' .env; then
+              echo "ERROR: .env.prod must set OPENCLAW_CONFIG_DIR and OPENCLAW_WORKSPACE_DIR (non-empty absolute paths)."
+              exit 1
             fi
             docker compose -f docker-compose.prod.yml pull
             docker compose -f docker-compose.prod.yml up -d

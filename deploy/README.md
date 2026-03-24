@@ -20,7 +20,7 @@ This repo includes **`docker-compose.prod.yml`**: same idea as digital-message-p
    ```
 
 4. **`docker-compose.prod.yml`** — the workflow uploads it; you can also copy it manually the first time.
-5. **`.env.prod`** in that same directory (template: [`env.prod.example`](./env.prod.example)) with at least `OPENCLAW_CONFIG_DIR` and `OPENCLAW_WORKSPACE_DIR` as absolute paths.
+5. **`.env.prod`** in that same directory (template: [`env.prod.example`](./env.prod.example)) with at least `OPENCLAW_CONFIG_DIR` and `OPENCLAW_WORKSPACE_DIR` as absolute paths. If these are missing, `docker compose` will error with `invalid spec: :/home/node/.openclaw` — the deploy job will also fail until `.env.prod` exists on the server with both variables set.
 
 6. **OpenClaw onboarding** (token, channels, etc.): do it once with a local image or with `docker compose run --rm openclaw-cli …` on the server after the first `up`, per the [official docs](https://openclaw.im/docs/install/docker).
 
@@ -56,6 +56,10 @@ docker compose -f docker-compose.prod.yml pull
 docker compose -f docker-compose.prod.yml up -d
 docker compose -f docker-compose.prod.yml down
 ```
+
+## Nginx reverse proxy (HTTPS)
+
+Example for **`assistant.dhalia.fun`** → `127.0.0.1:18789` (WebSocket-friendly): [`nginx-assistant.dhalia.fun.conf.example`](./nginx-assistant.dhalia.fun.conf.example). Add a DNS **A** record for `assistant.dhalia.fun`, install the snippet under `/etc/nginx/sites-available/`, enable the site, run **Certbot** for TLS, then `nginx -t` and reload.
 
 ## Workflow branch
 
