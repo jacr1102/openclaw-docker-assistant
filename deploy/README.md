@@ -2,6 +2,10 @@
 
 This repo includes **`docker-compose.prod.yml`**: same idea as digital-message-platform — image published to **GHCR**, `pull` on the server, then `up -d`. You do not need to clone OpenClaw on the VPS or build there.
 
+## Example hostnames in `deploy/`
+
+Sample files (e.g. [`nginx-assistant.dhalia.fun.conf.example`](./nginx-assistant.dhalia.fun.conf.example)) use **`assistant.dhalia.fun`** only as an **illustration** for DNS, TLS, Nginx `server_name`, and `gateway.controlUi.allowedOrigins`. Replace it with **your** real domain when you copy configs. Nothing in OpenClaw requires that hostname to appear in git—it is documentation and examples only.
+
 ## What the pipeline does (`.github/workflows/deploy.yml`)
 
 1. In GitHub Actions, clones [openclaw/openclaw](https://github.com/openclaw/openclaw) (`main` by default) and builds the official `Dockerfile`.
@@ -84,6 +88,24 @@ docker compose -f docker-compose.prod.yml restart openclaw-gateway
 **Temporary workaround** (weaker; only if you accept Host-header fallback): set `gateway.controlUi.dangerouslyAllowHostHeaderOriginFallback` to **`true`** in the same file — the OpenClaw error message mentions this flag.
 
 **Directory layout:** `OPENCLAW_WORKSPACE_DIR` must be a **sibling** of the config dir (e.g. `data/workspace`), not `data/config/workspace`. Remove an accidental nested `workspace` folder under `data/config` if you created it by mistake.
+
+## First Control UI access (HTTPS + Docker on the VPS)
+
+Typical order when opening the dashboard behind **Nginx + HTTPS** (e.g. `wss://your-domain`). Official detail: [Control UI — device pairing](https://docs.openclaw.ai/web/control-ui), [Pairing](https://docs.openclaw.ai/pairing).
+
+1. **Data dirs exist** and bind mounts in `.env.prod` point to absolute paths. **Ownership:** the image runs as user `node` (uid **1000** on the official image). If logs show `EACCES` on `openclaw.json`, run:
+   `sudo chown -R 1000:1000 "$OPENCLAW_CONFIG_DIR" "$OPENCLAW_WORKSPACE_DIR"`
+2. **Gateway starts:** `docker-compose.prod.yml` includes **`--allow-unconfigured`** until you have a real config; remove later if you want a stricter boot.
+3. **`allowedOrigins`:** with `OPENCLAW_GATEWAY_BIND=lan`, set `gateway.controlUi.allowedOrigins` in **`openclaw.json`** to your HTTPS origin (see section above). **`controlUi` goes under `gateway`**, not at the root of the JSON.
+4. **Reverse proxy:** Nginx proxies to `127.0.0.1:18789` with WebSocket headers; avoid duplicate `server { listen 80; }` blocks after Certbot. TLS certificates must exist before the `ssl_certificate` lines load.
+5. **Gateway token:** paste the token from **`gateway.auth.token`** in `openclaw.json` into the dashboard (or read with `jq -r '.gateway.auth.token' openclaw.json`). Treat it like a secret.
+6. **Optional field “Password (not stored)”** in the UI is not your Linux password; you can usually leave it empty if you only use the gateway token.
+7. **Pairing:** remote browsers are not auto-approved (unlike `127.0.0.1`). When the UI shows **pairing required**, run **`devices list`** and approve the **pending** `requestId`:
+   ```bash
+   docker compose -f docker-compose.prod.yml run --rm openclaw-cli devices list
+   docker compose -f docker-compose.prod.yml run --rm openclaw-cli devices approve <requestId>
+   ```
+   Use the **pending** request id, **not** the “Device” id from the **Paired** table. Trigger **Connect** in the browser, then run `devices list` immediately so a pending row appears.
 
 ## Workflow branch
 
