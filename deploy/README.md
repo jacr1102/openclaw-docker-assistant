@@ -2,6 +2,10 @@
 
 This repo includes **`docker-compose.prod.yml`**: same idea as digital-message-platform — image published to **GHCR**, `pull` on the server, then `up -d`. You do not need to clone OpenClaw on the VPS or build there.
 
+## Editing config on the server
+
+Use **`vim`** for examples that edit files on the VPS (e.g. `sudo vim /etc/nginx/sites-available/assistant`, `sudo vim "$OPENCLAW_CONFIG_DIR/openclaw.json"`). Substitute another editor if you prefer.
+
 ## Example hostnames in `deploy/`
 
 [`nginx-openclaw.https.example.conf`](./nginx-openclaw.https.example.conf) uses **`openclaw.example.com`** (reserved for documentation) for DNS, TLS, Nginx `server_name`, and `gateway.controlUi.allowedOrigins`. Replace it with **your** real domain when you copy configs.
