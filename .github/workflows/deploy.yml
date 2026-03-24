@@ -1,0 +1,87 @@
+name: Deploy OpenClaw image to GHCR and server
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+env:
+  OPENCLAW_UPSTREAM_REF: main
+
+jobs:
+  build-and-push:
+    name: Build OpenClaw and push to GHCR
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout wrapper repo
+        uses: actions/checkout@v4
+
+      - name: Clone OpenClaw upstream
+        run: |
+          git clone --depth 1 --branch "${OPENCLAW_UPSTREAM_REF}" \
+            https://github.com/openclaw/openclaw.git upstream
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Image tag
+        id: meta
+        run: |
+          REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          echo "image=ghcr.io/${REPO_LOWER}/openclaw:latest" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: ./upstream
+          file: ./upstream/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.image }}
+
+  deploy:
+    name: Deploy via SSH
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    if: success()
+    environment: production
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Copy compose to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "docker-compose.prod.yml"
+          target: ${{ secrets.DEPLOY_PATH }}
+
+      - name: Pull image and restart stack
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+            DEPLOY_PATH="${{ secrets.DEPLOY_PATH }}"
+            cd "$DEPLOY_PATH"
+            REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+            export IMAGE_OPENCLAW="ghcr.io/${REPO_LOWER}/openclaw:latest"
+            echo "IMAGE_OPENCLAW=$IMAGE_OPENCLAW" > .env
+            if [ -f .env.prod ]; then
+              grep -v '^IMAGE_OPENCLAW=' .env.prod >> .env || true
+            fi
+            docker compose -f docker-compose.prod.yml pull
+            docker compose -f docker-compose.prod.yml up -d
+            docker image prune -f

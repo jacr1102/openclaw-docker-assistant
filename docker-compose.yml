@@ -1,0 +1,12 @@
+# Run OpenClaw from the repository root (same services as upstream).
+# Prerequisites: ./upstream must exist — run: ./scripts/bootstrap.sh
+#
+# Typical usage after building the image (see README / deploy/README.md):
+#   export OPENCLAW_CONFIG_DIR=... OPENCLAW_WORKSPACE_DIR=...
+#   docker compose up -d
+#
+# Or: copy deploy/vps.env.example to .env and adjust paths, then:
+#   docker compose --env-file .env up -d
+
+include:
+  - path: upstream/docker-compose.yml

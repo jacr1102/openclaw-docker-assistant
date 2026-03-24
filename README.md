@@ -28,9 +28,25 @@ Then open the Control UI at [http://127.0.0.1:18789/](http://127.0.0.1:18789/) a
 
 See [`.env.example`](./.env.example) for optional environment variables. Official Docker documentation: [Docker | OpenClaw Docs](https://openclaw.im/docs/install/docker).
 
+## Compose from the repo root (optional)
+
+If `upstream/` is already present, you can also run Compose from the **repository root**; the root `docker-compose.yml` includes the official file under `upstream/`:
+
+```bash
+docker compose up -d
+```
+
+Set `OPENCLAW_CONFIG_DIR` and `OPENCLAW_WORKSPACE_DIR` (and other variables) via your environment or a `.env` file next to this README. For a local template without GHCR, see [`deploy/vps.env.example`](./deploy/vps.env.example).
+
+## Production (GHCR + server deploy)
+
+- **`docker-compose.prod.yml`** — uses an image from GitHub Container Registry; no build on the VPS.
+- **`.github/workflows/deploy.yml`** — builds OpenClaw from the official upstream, pushes to `ghcr.io/<org>/<repo>/openclaw:latest`, copies the compose file to the server, and runs `pull` + `up -d`.
+- On the server you need **`.env.prod`** with absolute paths to data; template: [`deploy/env.prod.example`](./deploy/env.prod.example). Full guide: [`deploy/README.md`](./deploy/README.md).
+
 ## Day-to-day commands
 
-All `docker compose` commands run from **`./upstream/`** (that is where the official `docker-compose.yml` lives). After setup, the upstream script prints a `docker compose ...` hint you can reuse.
+All `docker compose` commands can run from **`./upstream/`** (that is where the official `docker-compose.yml` lives) or from the repo root as above. After setup, the upstream script prints a `docker compose ...` hint you can reuse.
 
 Examples (run inside `./upstream`):
 
