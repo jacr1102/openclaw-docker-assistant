@@ -22,7 +22,7 @@ This repo includes **`docker-compose.prod.yml`**: same idea as digital-message-p
 4. **`docker-compose.prod.yml`** — the workflow uploads it; you can also copy it manually the first time.
 5. **`.env.prod`** in that same directory (template: [`env.prod.example`](./env.prod.example)) with at least `OPENCLAW_CONFIG_DIR` and `OPENCLAW_WORKSPACE_DIR` as absolute paths. If these are missing, `docker compose` will error with `invalid spec: :/home/node/.openclaw` — the deploy job will also fail until `.env.prod` exists on the server with both variables set.
 
-6. **OpenClaw onboarding** (token, channels, etc.): do it once with a local image or with `docker compose run --rm openclaw-cli …` on the server after the first `up`, per the [official docs](https://openclaw.im/docs/install/docker).
+6. **First boot:** the production compose starts the gateway with **`--allow-unconfigured`** so it can run before `openclaw setup` has been completed. Open the Control UI and finish setup, or run `docker compose run --rm openclaw-cli setup` (or `onboard`) per the [official docs](https://openclaw.im/docs/install/docker). If you remove `--allow-unconfigured` from `docker-compose.prod.yml` later, the gateway will require a valid config to start.
 
 ## GitHub secrets (Environment: `production`)
 
