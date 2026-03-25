@@ -2,8 +2,8 @@
 # - gog (gogcli) — Gmail watch / Pub/Sub → OpenClaw hooks (see OpenClaw Gmail docs)
 # - gh — GitHub CLI for `gh issue create` and automation from agents
 #
-# Build in CI after loading the upstream image as openclaw-upstream:local:
-#   docker build -f docker/Dockerfile.openclaw-tools --build-arg BASE_IMAGE=openclaw-upstream:local -t openclaw:tools .
+# CI: pass BASE_IMAGE=ghcr.io/<org>/<repo>/openclaw-base:latest (upstream image pushed first).
+# Local: docker build -f docker/Dockerfile.openclaw-tools --build-arg BASE_IMAGE=openclaw-upstream:local -t openclaw:tools .
 
 # syntax=docker/dockerfile:1
 

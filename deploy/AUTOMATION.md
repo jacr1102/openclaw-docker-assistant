@@ -1,6 +1,8 @@
 # Gmail, hooks y GitHub (imagen extendida)
 
-La imagen publicada en GHCR (`ghcr.io/<org>/<repo>/openclaw:latest`) **incluye**:
+CI publica dos etiquetas en GHCR: **`openclaw-base:latest`** (solo upstream OpenClaw) y **`openclaw:latest`** (base + `gog` + `gh`). El despliegue usa **`openclaw:latest`**.
+
+La imagen **`openclaw:latest`** **incluye**:
 
 - **`gog`** — CLI [gogcli](https://gogcli.sh/) para Gmail (watch, Pub/Sub, etc.), alineado con [Gmail Pub/Sub | OpenClaw Docs](https://docs.openclaw.ai/automation/gmail-pubsub).
 - **`gh`** — [GitHub CLI](https://cli.github.com/) para crear issues (`gh issue create`, etc.) desde scripts o skills.
@@ -47,11 +49,19 @@ docker compose -f docker-compose.prod.yml exec openclaw-gateway sh -c 'command -
 
 ## Build local de la imagen extendida (opcional)
 
-Tras construir upstream como `openclaw-upstream:local`:
+Tras construir upstream como `openclaw-upstream:local` (mismo daemon Docker que ejecuta el `build` siguiente):
 
 ```bash
 docker build -f docker/Dockerfile.openclaw-tools \
   --build-arg BASE_IMAGE=openclaw-upstream:local \
+  -t openclaw:local-tools .
+```
+
+O usando la base ya subida a GHCR:
+
+```bash
+docker build -f docker/Dockerfile.openclaw-tools \
+  --build-arg BASE_IMAGE=ghcr.io/TU_ORG/TU_REPO/openclaw-base:latest \
   -t openclaw:local-tools .
 ```
 
