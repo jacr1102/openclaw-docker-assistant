@@ -4,6 +4,7 @@
 #   IMAGE_OPENCLAW=ghcr.io/tu-org/tu-repo/openclaw:latest
 #   OPENCLAW_CONFIG_DIR=/ruta/absoluta/config
 #   OPENCLAW_WORKSPACE_DIR=/ruta/absoluta/workspace
+# Opcional (Slack): SLACK_APP_TOKEN, SLACK_BOT_TOKEN — deben estar en .env tras fusionar .env.prod
 #
 # En el servidor:
 #   docker compose -f docker-compose.prod.yml pull
@@ -21,6 +22,8 @@ services:
       CLAUDE_WEB_SESSION_KEY: ${CLAUDE_WEB_SESSION_KEY:-}
       CLAUDE_WEB_COOKIE: ${CLAUDE_WEB_COOKIE:-}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      SLACK_APP_TOKEN: ${SLACK_APP_TOKEN:-}
+      SLACK_BOT_TOKEN: ${SLACK_BOT_TOKEN:-}
       TZ: ${OPENCLAW_TZ:-UTC}
     volumes:
       - ${OPENCLAW_CONFIG_DIR}:/home/node/.openclaw
@@ -72,6 +75,8 @@ services:
       CLAUDE_WEB_SESSION_KEY: ${CLAUDE_WEB_SESSION_KEY:-}
       CLAUDE_WEB_COOKIE: ${CLAUDE_WEB_COOKIE:-}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      SLACK_APP_TOKEN: ${SLACK_APP_TOKEN:-}
+      SLACK_BOT_TOKEN: ${SLACK_BOT_TOKEN:-}
       TZ: ${OPENCLAW_TZ:-UTC}
     volumes:
       - ${OPENCLAW_CONFIG_DIR}:/home/node/.openclaw

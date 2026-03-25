@@ -65,6 +65,34 @@ docker compose -f docker-compose.prod.yml up -d
 docker compose -f docker-compose.prod.yml down
 ```
 
+### `.env` vs `.env.prod` (secrets and `OPENAI_API_KEY`)
+
+Docker Compose reads **`./.env`** in the deploy directory for variable substitution (e.g. `${OPENAI_API_KEY:-}` in `docker-compose.prod.yml`). It does **not** automatically load **`.env.prod`**.
+
+The GitHub Actions deploy job **merges** `.env.prod` into `.env` on each deploy (`IMAGE_OPENCLAW` plus the rest of `.env.prod`). If you add a secret only to **`.env.prod`** and run `docker compose up` locally without redeploying, **`.env` may still omit that variable**, so inside the container `OPENAI_API_KEY` is empty.
+
+**Fix (pick one):**
+
+1. **Regenerate `.env` like CI** (from your deploy directory):
+
+   ```bash
+   REPO_LOWER=$(echo "your-org/your-repo" | tr '[:upper:]' '[:lower:]')
+   export IMAGE_OPENCLAW="ghcr.io/${REPO_LOWER}/openclaw:latest"
+   echo "IMAGE_OPENCLAW=$IMAGE_OPENCLAW" > .env
+   grep -v '^IMAGE_OPENCLAW=' .env.prod >> .env
+   docker compose -f docker-compose.prod.yml up -d
+   ```
+
+2. **Or** load **both** env files: `IMAGE_OPENCLAW` is written to **`.env`** by the deploy job, not to **`.env.prod`**. Using only `--env-file .env.prod` leaves `IMAGE_OPENCLAW` unset and Compose fails (`invalid compose project`). Use **`.env` first**, then **`.env.prod`** so secrets from prod override or supplement:
+
+   ```bash
+   docker compose --env-file .env --env-file .env.prod -f docker-compose.prod.yml up -d
+   ```
+
+3. **Or** append `OPENAI_API_KEY=...` to **`.env`** (same directory as the compose file), then `docker compose -f docker-compose.prod.yml up -d`.
+
+Verify inside the gateway: `docker compose -f docker-compose.prod.yml exec openclaw-gateway sh -c 'echo "len=${#OPENAI_API_KEY}"'` — you want a non-zero length (do not paste the key in chat logs).
+
 ## Nginx reverse proxy (HTTPS)
 
 Example: **`openclaw.example.com`** → `127.0.0.1:18789` (WebSocket-friendly): [`nginx-openclaw.https.example.conf`](./nginx-openclaw.https.example.conf). Add a DNS **A** record for your hostname, install the snippet under `/etc/nginx/sites-available/`, enable the site, run **Certbot** for TLS, then `nginx -t` and reload.
