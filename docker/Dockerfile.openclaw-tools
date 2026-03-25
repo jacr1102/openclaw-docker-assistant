@@ -9,7 +9,9 @@
 
 ARG BASE_IMAGE=openclaw-upstream:local
 
-FROM golang:1.23-bookworm AS gog-build
+# gogcli go.mod may require a recent Go (e.g. >= 1.25.x); keep this in sync with upstream.
+FROM golang:1.25-bookworm AS gog-build
+ENV GOTOOLCHAIN=auto
 RUN apt-get update \
   && apt-get install -y --no-install-recommends git make \
   && rm -rf /var/lib/apt/lists/*
