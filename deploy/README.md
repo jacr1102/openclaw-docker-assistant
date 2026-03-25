@@ -32,6 +32,8 @@ Use **`vim`** for examples that edit files on the VPS (e.g. `sudo vim /etc/nginx
 
 6. **First boot:** the production compose starts the gateway with **`--allow-unconfigured`** so it can run before `openclaw setup` has been completed. Open the Control UI and finish setup, or run `docker compose run --rm openclaw-cli setup` (or `onboard`) per the [official docs](https://openclaw.im/docs/install/docker). If you remove `--allow-unconfigured` from `docker-compose.prod.yml` later, the gateway will require a valid config to start.
 
+7. **Slack (optional):** create the Slack app, Bot Token Scopes, Event Subscriptions, Socket Mode, server env vars, and DM pairing — step-by-step in **[SLACK.md](./SLACK.md)**.
+
 ## GitHub secrets (Environment: `production`)
 
 | Secret | Purpose |

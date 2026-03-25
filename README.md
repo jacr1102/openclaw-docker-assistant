@@ -43,6 +43,7 @@ Set `OPENCLAW_CONFIG_DIR` and `OPENCLAW_WORKSPACE_DIR` (and other variables) via
 - **`docker-compose.prod.yml`** — uses an image from GitHub Container Registry; no build on the VPS.
 - **`.github/workflows/deploy.yml`** — builds OpenClaw from the official upstream, pushes to `ghcr.io/<org>/<repo>/openclaw:latest`, copies the compose file to the server, and runs `pull` + `up -d`.
 - On the server you need **`.env.prod`** with absolute paths to data; template: [`deploy/env.prod.example`](./deploy/env.prod.example). Full guide: [`deploy/README.md`](./deploy/README.md) (includes **first Control UI login** behind HTTPS: permissions, `allowedOrigins`, token, device pairing).
+- Optional **Slack** channel: [`deploy/SLACK.md`](./deploy/SLACK.md) (app, Bot scopes, events, Socket Mode, env, pairing).
 
 ## Day-to-day commands
 
