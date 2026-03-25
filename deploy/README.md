@@ -34,6 +34,8 @@ Use **`vim`** for examples that edit files on the VPS (e.g. `sudo vim /etc/nginx
 
 7. **Slack (optional):** create the Slack app, Bot Token Scopes, Event Subscriptions, Socket Mode, server env vars, and DM pairing — step-by-step in **[SLACK.md](./SLACK.md)**.
 
+8. **Gmail hooks / GitHub issues (optional):** the GHCR image includes **`gog`** and **`gh`**. Env vars and `openclaw.json` notes: **[AUTOMATION.md](./AUTOMATION.md)**.
+
 ## GitHub secrets (Environment: `production`)
 
 | Secret | Purpose |

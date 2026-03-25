@@ -1,0 +1,10 @@
+# Context for docker/Dockerfile.openclaw-tools (repo root)
+.git
+.github
+upstream
+data
+*.md
+!docker/**
+.env
+.env.*
+**/.env

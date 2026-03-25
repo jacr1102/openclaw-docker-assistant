@@ -38,13 +38,28 @@ jobs:
           REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
           echo "image=ghcr.io/${REPO_LOWER}/openclaw:latest" >> "$GITHUB_OUTPUT"
 
-      - name: Build and push
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # 1) Build upstream OpenClaw image and load it locally (tag used by next Dockerfile).
+      - name: Build upstream image (load)
         uses: docker/build-push-action@v6
         with:
           context: ./upstream
           file: ./upstream/Dockerfile
+          load: true
+          tags: openclaw-upstream:local
+
+      # 2) Extend with gog (Gmail watch) + gh (GitHub CLI), push to GHCR.
+      - name: Build and push image with gog + gh
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./docker/Dockerfile.openclaw-tools
           push: true
           tags: ${{ steps.meta.outputs.image }}
+          build-args: |
+            BASE_IMAGE=openclaw-upstream:local
 
   deploy:
     name: Deploy via SSH
