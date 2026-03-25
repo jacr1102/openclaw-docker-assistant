@@ -75,6 +75,8 @@ Docker Compose reads **`./.env`** in the deploy directory for variable substitut
 
 The GitHub Actions deploy job **merges** `.env.prod` into `.env` on each deploy (`IMAGE_OPENCLAW` plus the rest of `.env.prod`). If you add a secret only to **`.env.prod`** and run `docker compose up` locally without redeploying, **`.env` may still omit that variable**, so inside the container `OPENAI_API_KEY` is empty.
 
+**Variables must appear in `docker-compose.prod.yml` under `environment:`** for each service (e.g. `OPENCLAW_SKIP_GMAIL_WATCHER`). Putting a name only in `.env` is not enough: Compose uses `.env` for **substitution** of `${VAR:-}` in the YAML, but the container only receives vars that are **declared** in `environment:` (unless you add `env_file:`).
+
 **Fix (pick one):**
 
 1. **Regenerate `.env` like CI** (from your deploy directory):
