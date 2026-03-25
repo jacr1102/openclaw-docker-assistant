@@ -51,8 +51,8 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.base_image }}
 
-      # 2) Extend with gog (Gmail watch) + gh (GitHub CLI); pull base from GHCR in the same registry.
-      - name: Build and push image with gog + gh
+      # 2) Extend with gh (GitHub CLI); pull base from GHCR in the same registry.
+      - name: Build and push image with gh
         uses: docker/build-push-action@v6
         with:
           context: .

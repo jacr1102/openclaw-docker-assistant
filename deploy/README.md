@@ -34,7 +34,7 @@ Use **`vim`** for examples that edit files on the VPS (e.g. `sudo vim /etc/nginx
 
 7. **Slack (optional):** create the Slack app, Bot Token Scopes, Event Subscriptions, Socket Mode, server env vars, and DM pairing — step-by-step in **[SLACK.md](./SLACK.md)**.
 
-8. **Gmail hooks / GitHub issues (optional):** the GHCR image includes **`gog`** and **`gh`**. Env vars and `openclaw.json` notes: **[AUTOMATION.md](./AUTOMATION.md)**.
+8. **GitHub issues (optional):** the GHCR image includes **`gh`**. Env vars and `openclaw.json` notes: **[AUTOMATION.md](./AUTOMATION.md)**.
 
 ## GitHub secrets (Environment: `production`)
 
@@ -75,7 +75,7 @@ Docker Compose reads **`./.env`** in the deploy directory for variable substitut
 
 The GitHub Actions deploy job **merges** `.env.prod` into `.env` on each deploy (`IMAGE_OPENCLAW` plus the rest of `.env.prod`). If you add a secret only to **`.env.prod`** and run `docker compose up` locally without redeploying, **`.env` may still omit that variable**, so inside the container `OPENAI_API_KEY` is empty.
 
-**Variables must appear in `docker-compose.prod.yml` under `environment:`** for each service (e.g. `OPENCLAW_SKIP_GMAIL_WATCHER`). Putting a name only in `.env` is not enough: Compose uses `.env` for **substitution** of `${VAR:-}` in the YAML, but the container only receives vars that are **declared** in `environment:` (unless you add `env_file:`).
+**Variables must appear in `docker-compose.prod.yml` under `environment:`** for each service (e.g. `GH_TOKEN`). Putting a name only in `.env` is not enough: Compose uses `.env` for **substitution** of `${VAR:-}` in the YAML, but the container only receives vars that are **declared** in `environment:` (unless you add `env_file:`).
 
 **Fix (pick one):**
 

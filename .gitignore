@@ -4,6 +4,9 @@ upstream/
 # Persisted config, credentials, and workspace on the host
 data/
 
+# Local docker-compose.prod smoke test (do not commit)
+.local-openclaw/
+
 # Local secrets (use .env.example / deploy/vps.env.example as templates)
 .env
 

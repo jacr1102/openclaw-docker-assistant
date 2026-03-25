@@ -27,7 +27,6 @@ services:
       SLACK_BOT_TOKEN: ${SLACK_BOT_TOKEN:-}
       GH_TOKEN: ${GH_TOKEN:-}
       # Must be listed here or the container never sees it (Compose does not auto-pass all of .env).
-      OPENCLAW_SKIP_GMAIL_WATCHER: ${OPENCLAW_SKIP_GMAIL_WATCHER:-}
       TZ: ${OPENCLAW_TZ:-UTC}
     volumes:
       - ${OPENCLAW_CONFIG_DIR}:/home/node/.openclaw
@@ -82,7 +81,6 @@ services:
       SLACK_APP_TOKEN: ${SLACK_APP_TOKEN:-}
       SLACK_BOT_TOKEN: ${SLACK_BOT_TOKEN:-}
       GH_TOKEN: ${GH_TOKEN:-}
-      OPENCLAW_SKIP_GMAIL_WATCHER: ${OPENCLAW_SKIP_GMAIL_WATCHER:-}
       TZ: ${OPENCLAW_TZ:-UTC}
     volumes:
       - ${OPENCLAW_CONFIG_DIR}:/home/node/.openclaw
