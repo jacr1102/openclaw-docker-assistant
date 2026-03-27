@@ -14,6 +14,11 @@
 services:
   openclaw-gateway:
     image: ${IMAGE_OPENCLAW}
+    # Host DNS (e.g. systemd-resolved) may not be reachable from containers; explicit DNS avoids
+    # "Could not resolve host" for api.openai.com and other outbound HTTPS.
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     environment:
       HOME: /home/node
       TERM: xterm-256color
