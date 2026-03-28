@@ -10,5 +10,8 @@ data/
 # Local secrets (use .env.example / deploy/vps.env.example as templates)
 .env
 
+# Mac node launcher (copy from scripts/mac-node.env.example)
+scripts/mac-node.env
+
 # macOS
 .DS_Store

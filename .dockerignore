@@ -1,4 +1,4 @@
-# Context for docker/Dockerfile.openclaw-tools (repo root)
+# Repo-root Docker build contexts (if any)
 .git
 .github
 upstream

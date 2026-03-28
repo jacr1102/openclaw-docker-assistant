@@ -44,7 +44,7 @@ Set `OPENCLAW_CONFIG_DIR` and `OPENCLAW_WORKSPACE_DIR` (and other variables) via
 - **`.github/workflows/deploy.yml`** — builds OpenClaw from the official upstream, pushes to `ghcr.io/<org>/<repo>/openclaw:latest`, copies the compose file to the server, and runs `pull` + `up -d`.
 - On the server you need **`.env.prod`** with absolute paths to data; template: [`deploy/env.prod.example`](./deploy/env.prod.example). Full guide: [`deploy/README.md`](./deploy/README.md) (includes **first Control UI login** behind HTTPS: permissions, `allowedOrigins`, token, device pairing).
 - Optional **Slack** channel: [`deploy/SLACK.md`](./deploy/SLACK.md) (app, Bot scopes, events, Socket Mode, env, pairing).
-- **GitHub CLI** (`gh` in the published image): [`deploy/AUTOMATION.md`](./deploy/AUTOMATION.md).
+- **GitHub / `gh`:** not bundled in the server image — run **`gh` on an OpenClaw node** (e.g. Mac): [`deploy/AUTOMATION.md`](./deploy/AUTOMATION.md).
 
 ## Day-to-day commands
 

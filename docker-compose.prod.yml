@@ -5,7 +5,6 @@
 #   OPENCLAW_CONFIG_DIR=/ruta/absoluta/config
 #   OPENCLAW_WORKSPACE_DIR=/ruta/absoluta/workspace
 # Opcional (Slack): SLACK_APP_TOKEN, SLACK_BOT_TOKEN — deben estar en .env tras fusionar .env.prod
-# Opcional (GitHub CLI / issues): GH_TOKEN — PAT con permisos para crear issues en el repo objetivo
 #
 # En el servidor:
 #   docker compose -f docker-compose.prod.yml pull
@@ -30,7 +29,6 @@ services:
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       SLACK_APP_TOKEN: ${SLACK_APP_TOKEN:-}
       SLACK_BOT_TOKEN: ${SLACK_BOT_TOKEN:-}
-      GH_TOKEN: ${GH_TOKEN:-}
       # Must be listed here or the container never sees it (Compose does not auto-pass all of .env).
       TZ: ${OPENCLAW_TZ:-UTC}
     volumes:
@@ -85,7 +83,6 @@ services:
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       SLACK_APP_TOKEN: ${SLACK_APP_TOKEN:-}
       SLACK_BOT_TOKEN: ${SLACK_BOT_TOKEN:-}
-      GH_TOKEN: ${GH_TOKEN:-}
       TZ: ${OPENCLAW_TZ:-UTC}
     volumes:
       - ${OPENCLAW_CONFIG_DIR}:/home/node/.openclaw
