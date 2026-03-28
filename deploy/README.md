@@ -69,6 +69,10 @@ docker compose -f docker-compose.prod.yml up -d
 docker compose -f docker-compose.prod.yml down
 ```
 
+### Gateway: Node heap (OOM)
+
+If logs show `JavaScript heap out of memory` (often during `skills.update`), `docker-compose.prod.yml` sets `NODE_OPTIONS=--max-old-space-size=4096` on `openclaw-gateway` and `openclaw-cli`. Ensure the host has enough RAM for the container; to tune further, edit `NODE_OPTIONS` in that file or use a Compose override.
+
 ### `.env` vs `.env.prod` (secrets and `OPENAI_API_KEY`)
 
 Docker Compose reads **`./.env`** in the deploy directory for variable substitution (e.g. `${OPENAI_API_KEY:-}` in `docker-compose.prod.yml`). It does **not** automatically load **`.env.prod`**.

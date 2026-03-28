@@ -31,6 +31,8 @@ services:
       SLACK_BOT_TOKEN: ${SLACK_BOT_TOKEN:-}
       # Must be listed here or the container never sees it (Compose does not auto-pass all of .env).
       TZ: ${OPENCLAW_TZ:-UTC}
+      # Default Node heap ~2GB can OOM during heavy skills.update / directory scans.
+      NODE_OPTIONS: --max-old-space-size=4096
     volumes:
       - ${OPENCLAW_CONFIG_DIR}:/home/node/.openclaw
       - ${OPENCLAW_WORKSPACE_DIR}:/home/node/.openclaw/workspace
@@ -84,6 +86,7 @@ services:
       SLACK_APP_TOKEN: ${SLACK_APP_TOKEN:-}
       SLACK_BOT_TOKEN: ${SLACK_BOT_TOKEN:-}
       TZ: ${OPENCLAW_TZ:-UTC}
+      NODE_OPTIONS: --max-old-space-size=4096
     volumes:
       - ${OPENCLAW_CONFIG_DIR}:/home/node/.openclaw
       - ${OPENCLAW_WORKSPACE_DIR}:/home/node/.openclaw/workspace

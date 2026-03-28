@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
-# Start the OpenClaw node on macOS after verifying Tailscale.
-# Usage: ./scripts/start-openclaw-node-mac.sh
+# Install/start the OpenClaw node on macOS (user service) after verifying Tailscale.
 #
-# Prerrequisito: Tailscale conectado (app o menú). Este script no inicia Tailscale;
-# solo comprueba que el CLI responda. Si falla, abre la app y vuelve a ejecutar.
+# Uso:
+#   ./scripts/start-openclaw-node-mac.sh              # openclaw node install + status (segundo plano)
+#   ./scripts/start-openclaw-node-mac.sh --foreground # openclaw node run (terminal colgada, debug)
 #
-# Config: copia scripts/mac-node.env.example → scripts/mac-node.env o ~/.openclaw-node.env
+# Prerrequisito: Tailscale conectado. Config: scripts/mac-node.env o ~/.openclaw-node.env
+#
+# Tras install:  openclaw node status | stop | restart | uninstall
 
 set -euo pipefail
 
@@ -75,7 +77,28 @@ if ! tailscale status &>/dev/null; then
 fi
 
 echo "Tailscale: OK (tailscale status)"
-echo "Arrancando nodo → ws://${OPENCLAW_GATEWAY_HOST}:${PORT}"
+echo "Gateway: ${OPENCLAW_GATEWAY_HOST}:${PORT}"
 echo ""
 
-exec openclaw node run --host "$OPENCLAW_GATEWAY_HOST" --port "$PORT"
+if [[ "${1:-}" == "--foreground" || "${1:-}" == "--run" ]]; then
+  echo "Modo primer plano (openclaw node run). Ctrl+C para detener el nodo."
+  echo ""
+  exec openclaw node run --host "$OPENCLAW_GATEWAY_HOST" --port "$PORT"
+fi
+
+INSTALL_ARGS=(--host "$OPENCLAW_GATEWAY_HOST" --port "$PORT")
+[[ "${OPENCLAW_NODE_FORCE_INSTALL:-}" == "1" ]] && INSTALL_ARGS+=(--force)
+
+echo "Si tenías \`openclaw node run\` en otra terminal, deténlo (Ctrl+C) antes de continuar."
+echo ""
+echo "Instalando / actualizando servicio de nodo (segundo plano)..."
+openclaw node install "${INSTALL_ARGS[@]}"
+
+echo ""
+openclaw node status
+echo ""
+echo "Listo. El nodo queda en segundo plano (login LaunchAgent / servicio de usuario)."
+echo "  Parar:    openclaw node stop"
+echo "  Reiniciar: openclaw node restart"
+echo "  Quitar:   openclaw node uninstall"
+echo "Modo terminal colgada (debug): $0 --foreground"
