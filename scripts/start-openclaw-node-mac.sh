@@ -92,7 +92,12 @@ INSTALL_ARGS=(--host "$OPENCLAW_GATEWAY_HOST" --port "$PORT")
 echo "Si tenías \`openclaw node run\` en otra terminal, deténlo (Ctrl+C) antes de continuar."
 echo ""
 echo "Instalando / actualizando servicio de nodo (segundo plano)..."
-openclaw node install "${INSTALL_ARGS[@]}"
+echo "  (OPENCLAW_ALLOW_INSECURE_PRIVATE_WS=${OPENCLAW_ALLOW_INSECURE_PRIVATE_WS} → ws:// al VPS en tailnet)"
+echo ""
+# Install must see this env so the LaunchAgent plist keeps plaintext ws to your gateway (see node.err.log).
+env OPENCLAW_ALLOW_INSECURE_PRIVATE_WS="${OPENCLAW_ALLOW_INSECURE_PRIVATE_WS}" \
+  OPENCLAW_GATEWAY_TOKEN="${OPENCLAW_GATEWAY_TOKEN}" \
+  openclaw node install "${INSTALL_ARGS[@]}"
 
 echo ""
 openclaw node status
