@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# Fallback: Cursor agent + Gmail MCP (slow / can hang). Prefer oc-gmail for Slack.
+# Usage: oc-gmail-agent "Using gmail MCP list_labels pageSize 3; report names only"
+set -euo pipefail
+export HOME=/home/chucky
+export PATH="/home/chucky/.local/bin:/home/chucky/.nvm/versions/node/v24.19.0/bin:/usr/local/bin:/usr/bin:/bin:${PATH:-}"
+AGENT="${OC_AGENT_BIN:-/home/chucky/.local/share/cursor-agent/versions/2026.08.04-aaa8809/cursor-agent}"
+TIMEOUT_SECS="${OC_GMAIL_AGENT_TIMEOUT:-120}"
+if [[ $# -lt 1 ]]; then
+  echo 'Usage: oc-gmail-agent "prompt for gmail MCP"' >&2
+  exit 2
+fi
+exec /usr/bin/timeout --signal=TERM --kill-after=15 "${TIMEOUT_SECS}s" \
+  "$AGENT" -p --print --approve-mcps --trust --force "$@"

@@ -5,12 +5,27 @@ _Learn about the person you're helping. Update this as you go._
 - **Name:**
 - **What to call them:**
 - **Pronouns:** _(optional)_
-- **Timezone:**
-- **Notes:**
+- **Timezone:** America/Bogota (COT) unless they say otherwise
+- **Notes:** Prefer Spanish for property / administración / cuota search terms.
 
 ## Context
 
-_(What do they care about? What projects are they working on? What annoys them? What makes them laugh? Build this over time.)_
+### Properties / administración (non-secret)
+
+- **Entreverde** — administración / cuotas (search: `entreverde`, `administracion entreverde`)
+- **Tocancipá** — administración / cuotas (search: `tocancipa`, `tocancipá`, `administracion tocancipa`)
+
+Aliases and payment query hints live in **`gmail-aliases.json`** (workspace). Use those before asking the user for alternate names.
+
+### Preferences
+
+- Prefer **Spanish** Gmail search terms (`administracion`, `pago`, `pagado`, `factura`, `recibo`, `cuota`).
+- When asked about payments/admin for a property, search first — don't ask for aliases already listed here or in `gmail-aliases.json`.
+
+### Safety
+
+- **Never store passwords, tokens, OTP codes, or other secrets** in this file, memory notes, or Slack replies.
+- Non-secret hostnames, property names, and glossary terms are fine.
 
 ---
 

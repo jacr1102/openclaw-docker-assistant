@@ -1,0 +1,21 @@
+{
+  "properties": [
+    {
+      "name": "Entreverde",
+      "queries": ["entreverde", "administracion entreverde", "admin entreverde"]
+    },
+    {
+      "name": "Tocancipá",
+      "queries": ["tocancipa", "tocancipá", "administracion tocancipa"]
+    }
+  ],
+  "paymentHints": [
+    "pago",
+    "pagado",
+    "factura",
+    "recibo",
+    "administracion",
+    "administración",
+    "cuota"
+  ]
+}

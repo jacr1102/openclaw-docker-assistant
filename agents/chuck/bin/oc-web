@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# OpenClaw-safe web research via Cursor agent (WebSearch/WebFetch).
+# Prefer this over OpenAI guessing. Do NOT use OpenClaw browser plugin.
+set -euo pipefail
+export HOME=/home/chucky
+export PATH="/home/chucky/.local/bin:/home/chucky/.nvm/versions/node/v24.19.0/bin:/usr/local/bin:/usr/bin:/bin:${PATH:-}"
+OC_AGENT="${OC_AGENT_WRAPPER:-/home/chucky/.local/bin/oc-agent}"
+export OC_AGENT_TIMEOUT="${OC_WEB_TIMEOUT:-180}"
+
+if [[ $# -lt 1 ]]; then
+  echo "Usage: oc-web <research query>" >&2
+  exit 2
+fi
+
+QUERY="$*"
+PROMPT="Busca en la web: ${QUERY}. Usa WebSearch y WebFetch. No inventes datos en vivo. Resume fuentes (URLs) y datos clave de forma concisa."
+
+exec "$OC_AGENT" -p --approve-mcps --trust --force "$PROMPT"

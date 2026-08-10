@@ -9,6 +9,28 @@ data/
 
 # Local secrets (use .env.example / deploy/vps.env.example as templates)
 .env
+.env.*
+!.env.example
+
+# Live OpenClaw / MCP configs with tokens (commit *.example only)
+openclaw.json
+**/openclaw.json
+mcp.json
+**/mcp.json
+!**/*.example.json
+!**/*.json.example
+
+# OAuth / device auth / tokens (never commit)
+**/*token*
+**/*tokens*
+**/gmail-oauth-client.json
+**/.mcp-auth/
+**/device-auth*
+**/*slack*token*
+
+# Live gmail aliases (commit gmail-aliases.json.example only)
+**/gmail-aliases.json
+!**/gmail-aliases.json.example
 
 # Mac node launcher (copy from scripts/mac-node.env.example)
 scripts/mac-node.env

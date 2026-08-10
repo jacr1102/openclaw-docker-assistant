@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -euo pipefail
+# OpenClaw-safe Cursor agent wrapper (coding). Prefer oc-gmail for Gmail.
+export HOME=/home/chucky
+export PATH="/home/chucky/.local/bin:/home/chucky/.nvm/versions/node/v24.19.0/bin:/usr/local/bin:/usr/bin:/bin:${PATH:-}"
+AGENT="${OC_AGENT_BIN:-/home/chucky/.local/share/cursor-agent/versions/2026.08.04-aaa8809/cursor-agent}"
+TIMEOUT_SECS="${OC_AGENT_TIMEOUT:-600}"
+exec /usr/bin/timeout --signal=TERM --kill-after=20 "${TIMEOUT_SECS}s" "$AGENT" "$@"

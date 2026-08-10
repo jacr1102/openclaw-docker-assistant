@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# Fast Gmail for OpenClaw — Gmail REST via Node (no Cursor agent loop).
+# Usage:
+#   oc-gmail labels --limit 5
+#   oc-gmail search "newer_than:2d is:unread" --limit 5
+#   oc-gmail search --multi entreverde tocancipa --newer-than 90d
+#   oc-gmail payment-check [--property Entreverde]
+#   oc-gmail drafts --limit 5
+set -euo pipefail
+export HOME=/home/chucky
+export PATH="/home/chucky/.local/bin:/home/chucky/.nvm/versions/node/v24.19.0/bin:/usr/local/bin:/usr/bin:/bin:${PATH:-}"
+NODE_BIN="${OC_GMAIL_NODE:-/home/chucky/.nvm/versions/node/v24.19.0/bin/node}"
+SCRIPT="${OC_GMAIL_SCRIPT:-/home/chucky/.cursor/oc-gmail.mjs}"
+TIMEOUT_SECS="${OC_GMAIL_TIMEOUT:-120}"
+exec /usr/bin/timeout --signal=TERM --kill-after=10 "${TIMEOUT_SECS}s" \
+  "$NODE_BIN" "$SCRIPT" "$@"
