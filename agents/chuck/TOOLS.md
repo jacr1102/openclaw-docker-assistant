@@ -194,6 +194,14 @@ When the human is in one of these Slack channels (or clearly referring to it), u
 - Heartbeat disabled (`agents.defaults.heartbeat.every: "0m"`) to save API credits.
 - VPS (`assistant.dhalia.fun` / `server2`) is Nginx TLS edge + rollback data; OpenClaw container stays **stopped**.
 
+### MCSAI MySQL backup (chucky)
+
+- Script: `/home/chucky/bin/mcsai-backup-remote.sh` — dumps prod hosting MySQL to `/home/chucky/Backups/mcsai-remote/`.
+- Secrets only in `/home/chucky/.config/mcsai-backup/backup.conf` (mode `600`). Never print or commit.
+- Crontab (user `chucky`): `5 8,17 * * *` → `~/logs/mcsai-cron.log`.
+- Mac still runs the same backup (crontab + LaunchAgent) until chucky is verified — do not disable Mac.
+- Details: `/home/chucky/Backups/mcsai-remote/README.md` and `docs/migration-chucky-notes.md`.
+
 ## VPS access from chucky (SSH + limited sudo)
 
 - Prefer **`ssh dhaliora '…'`** for VPS work; use the local shell for chucky itself.
