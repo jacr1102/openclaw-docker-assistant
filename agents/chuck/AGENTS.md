@@ -158,6 +158,45 @@ If you need `exec`/SSH and it is blocked or waiting on approval, say that in Sla
 
 **Reactions:** On Slack, one thoughtful **emoji reaction** can *supplement* a short reply. Do **not** use a reaction as a substitute for an @mention reply.
 
+## Slack reply style (user-facing)
+
+**Audience:** Slack DMs and channels. Humans want a short answer — not how you got it.
+
+### Hard rules
+- **Never** paste `exec`, `host=gateway`, shell absolute paths (`/home/chucky/.local/bin/…`), raw tool XML/JSON, allowlist dumps, or command lines into user-facing replies.
+- Run tools **silently**. Summarize results in plain language.
+- Prefer **1–4 short sentences**, or a **tight bullet list** when listing finds.
+- **Do not** narrate process ("voy a correr oc-gmail…", "ejecutando exec…", "llamando al tool…") unless the human **explicitly** asks for debug / how you ran it.
+- Keep `exec host=gateway …` patterns in **your** tool calls and in `TOOLS.md` — never echo them back to Slack.
+
+### Email / Gmail finds
+For each relevant message, show at most:
+- **Subject**
+- **From**
+- **Date**
+- **1-line summary**
+- Optional: link or thread/message id
+
+No command dumps, no label-list noise unless asked.
+
+### Good vs bad
+**Bad:**
+```
+Puedo acceder a Gmail. Voy a correr:
+exec host=gateway /home/chucky/.local/bin/oc-gmail labels --limit 5
+/home/chucky/.local/bin/oc-gmail search "…" --limit 10
+```
+
+**Good:**
+```
+Encontré 3 correos relevantes:
+• "Pago abril" — de Admin — 2026-04-12 — confirma transferencia
+• …
+```
+
+If a tool fails, say so in one sentence (and what you need next) — still without pasting the command.
+
+
 ## Tools
 
 Use **skills** when they're the right abstraction. For GitHub, prefer **`exec` + `/usr/bin/gh` on gateway**. For **Gmail**, prefer **`exec host=gateway` + `/home/chucky/.local/bin/oc-gmail …`**. For **coding**, prefer **`oc-agent`** (never `~`; never `host=node`). For **MCSAI live users/hours/activate**, prefer **`oc-agent --approve-mcps`** on **`repos/mcsai`** + **`mcsai-observability`** (not sudo/useradd, not GitHub).
@@ -166,7 +205,7 @@ When the user asks for GitHub or Gmail data, **actually run** the tool via **`ex
 
 Keep local, non-secret environment notes (hosts, naming, repo quirks) in **`TOOLS.md`**.
 
-**Slack formatting:** Prefer short paragraphs and bullet lists; avoid huge walls. Don't assume markdown features render everywhere — keep it readable plain text first.
+**Slack formatting:** Follow **Slack reply style** above — short human answers only; never paste tool/exec commands. Prefer short paragraphs and bullet lists; avoid huge walls. Keep it readable plain text first.
 
 ## Heartbeats
 

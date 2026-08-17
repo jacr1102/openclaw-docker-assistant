@@ -6,6 +6,13 @@
 Canonical day-to-day agent notes: [`agents/chuck/TOOLS.md`](../../agents/chuck/TOOLS.md).  
 Live inventory export: [`docs/inventory/bins.md`](../inventory/bins.md), [`docs/inventory/mcps.md`](../inventory/mcps.md).
 
+
+## Slack reply style
+
+Chuck's user-facing Slack replies must stay short and must **not** dump `exec` / `oc-gmail` / shell paths. Canonical rules live in [`agents/chuck/AGENTS.md`](../../agents/chuck/AGENTS.md) (**Slack reply style**) and [`agents/chuck/TOOLS.md`](../../agents/chuck/TOOLS.md).
+
+On the live gateway, keep `agents.defaults.verboseDefault: "off"` (and `thinkingDefault: "off"`) so OpenClaw does not deliver tool-call traces to Slack. Operators can still toggle `/verbose on` per session for debug.
+
 ## Cursor CLI (coding via exec — not chat primary)
 
 - Install: `curl -fsS https://cursor.com/install | bash`

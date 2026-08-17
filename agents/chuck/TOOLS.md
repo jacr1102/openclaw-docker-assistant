@@ -174,6 +174,17 @@ Aliases file (non-secret): `/home/chucky/.openclaw/workspace/gmail-aliases.json`
 - Bot is the team's dev assistant (**Chuck**).
 - Prefer **threads** in busy channels when replies get long.
 
+### Slack reply style (no tool traces)
+
+User-facing Slack replies must stay **concise** and **human**:
+- Never paste `exec`, `host=gateway`, `/home/chucky/.local/bin/…`, raw JSON/XML tool payloads, or shell command lines.
+- Run `oc-gmail` / `oc-web` / `oc-agent` / `gh` silently; reply with a short summary only.
+- Email results: subject, from, date, 1-line summary (± id/link). Prefer 1–4 sentences or a tight bullet list.
+- Do not announce "voy a correr oc-gmail…" unless the human asks for debug.
+
+(Internal operators still use the `exec host=gateway` patterns below — those are for the agent tool layer, not for Slack text.)
+
+
 ### Channel → default GitHub repo
 
 When the human is in one of these Slack channels (or clearly referring to it), use that repo for `gh` / bugs / PRs / tech-gate work **unless they name another repo**:
