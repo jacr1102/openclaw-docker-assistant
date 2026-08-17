@@ -32,7 +32,7 @@ Channel map for normal bugs/PRs (unchanged): `#mc-sai` → `mcsai`, `#dhaliora` 
 
 ## Slack / WhatsApp session freeze recovery (self-serve)
 
-Chat primary is **`cursor-cli/auto`** (local `cursor-agent` CLI backend). Long coding turns can stall a session; corrupt Cursor CLI sessions may fail with stream-json / “Something went wrong… use /new”.
+Chat primary is **`ollama/qwen3.6:35b-a3b`** (local Qwen). Cursor CLI is **not** primary — use via `oc-agent`/`oc-web`. Sessions can still stick (exec approval / hung coding); Cursor stream-json failures may say use /new.
 
 **User recovery (same conversation — plain text, no Slack slash required):**
 1. Type exactly **`reset`** or **`new`** as the whole message (recommended). Gateway resets the session without the LLM.
@@ -48,7 +48,7 @@ WhatsApp (when linked): same — type `reset` or `new`.
 **Operator notes:** Avoid many parallel long coding tasks in Slack against the same workspace. Concurrent `cursor-agent` runs can still contend for disk/CPU.
 
 
-## Prefer fast tools + Cursor CLI (save OpenAI tokens)
+## Prefer fast tools + Cursor via exec (Qwen orchestrates)
 
 Delegate via **`exec host=gateway`**. **Never** use `~` paths. Prefer **`host=gateway`**; do not use disconnected `host=node`.
 
@@ -56,7 +56,7 @@ Delegate via **`exec host=gateway`**. **Never** use `~` paths. Prefer **`host=ga
 |-----|-----|
 | **Gmail** (labels / search / drafts / payment-check) | **`/home/chucky/.local/bin/oc-gmail`** — fast Gmail REST (seconds). Examples: `oc-gmail labels --limit 5`, `oc-gmail-search "is:unread"`, `oc-gmail-search --payment-check`. **Do not invent email contents** |
 | **Web / internet research** (news, cartelera, precios, clima, current events, "busca en internet/web") | **`/home/chucky/.local/bin/oc-web "…"`** (Cursor WebSearch/WebFetch via `oc-agent`). **Never invent** live data. **Do not** enable OpenClaw browser |
-| Coding / multi-file edits / repo work | **`/home/chucky/.local/bin/oc-agent`** (or absolute `agent`) with `-p --approve-mcps --trust --force "…"`. Not for routine Gmail or web search |
+| Coding / multi-file edits / repo work | **`/home/chucky/.local/bin/oc-agent`** with **fresh** `-p --approve-mcps --trust --force "…"` per task (no resume). Not for routine Gmail or web search |
 | GitHub | `/usr/bin/gh` on chucky (already authenticated) |
 | VPS admin | `ssh dhaliora '…'` from chucky |
 | **MCSAI live admin** (users / hours / activate-deactivate via API) | **`oc-agent -p --approve-mcps --trust --force --workspace /home/chucky/.openclaw/workspace/repos/mcsai "…"`** using **`mcsai-observability` MCP**. **Never** `sudo` (including `sudo oc-agent`), **never** `useradd`. **Never** GitHub for live product users |
@@ -210,7 +210,9 @@ VPS `sudo` over `ssh dhaliora` is separate and limited; do **not** allowlist loc
 - If a previous turn used `/exec host=node`, reset session defaults — do not keep using node.
 - User can say **stop** or send a new shorter request to abandon a stuck poll.
 
-## Model routing (2026-08-17)
-- Chat/Slack (agent `main`): **cursor-cli/auto** (Cursor subscription; not OpenAI).
-- Cron (use `--agent cron`): **ollama/qwen3.6:35b-a3b** only.
-- See memory/cursor-primary-setup.md.
+## Model routing (hybrid, 2026-08-17)
+- Chat/Slack/WhatsApp (agent `main`): **ollama/qwen3.6:35b-a3b** (local Qwen).
+- Cron (use `--agent cron`): **ollama/qwen3.6:35b-a3b** (unchanged).
+- Cursor CLI: coding/heavy only via `oc-agent` / `oc-web` — not primary.
+- Workflow: one task at a time; plan in `memory/`; ask **¿sigo con la siguiente?**; fresh `oc-agent -p` each coding task.
+- See memory/model-hybrid-setup.md.

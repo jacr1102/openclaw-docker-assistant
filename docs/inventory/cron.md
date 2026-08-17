@@ -39,7 +39,7 @@ Note: backup.conf passwords intentionally omitted.
 {
   "defaults": {
     "model": {
-      "primary": "cursor-cli/auto"
+      "primary": "ollama/qwen3.6:35b-a3b"
     },
     "models": {
       "ollama/gpt-oss:20b": {
@@ -143,7 +143,7 @@ Note: backup.conf passwords intentionally omitted.
     {
       "id": "main",
       "model": {
-        "primary": "cursor-cli/auto"
+        "primary": "ollama/qwen3.6:35b-a3b"
       },
       "tools": {
         "exec": {

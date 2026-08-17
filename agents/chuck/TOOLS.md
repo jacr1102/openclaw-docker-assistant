@@ -44,7 +44,7 @@ VPS `sudo` over `ssh dhaliora` is separate and limited; do **not** allowlist loc
 - Property/payment presets: `/home/chucky/.openclaw/workspace/gmail-aliases.json` (non-secret aliases only).
 - Do **not** use Cursor `agent -p` for routine Gmail (slow; OpenClaw ends up polling sessions like `kind-haven` / `lucky-fjord`).
 
-### Coding — Cursor agent
+### Coding — Cursor agent via exec (not chat primary)
 
 ```bash
 /home/chucky/.local/bin/oc-agent -p --approve-mcps --trust --force "…"
@@ -229,10 +229,12 @@ When the human is in one of these Slack channels (or clearly referring to it), u
 
 Add SSH host **aliases** (non-sensitive), service names, or glossary terms only if they help day-to-day.
 
-## Model routing (2026-08-17)
-- Chat/Slack (agent `main`): **cursor-cli/auto** (Cursor subscription; not OpenAI).
-- Cron (use `--agent cron`): **ollama/qwen3.6:35b-a3b** only.
-- See memory/cursor-primary-setup.md.
+## Model routing (hybrid, 2026-08-17)
+- Chat/Slack/WhatsApp (agent `main`): **ollama/qwen3.6:35b-a3b** (local Qwen).
+- Cron (use `--agent cron`): **ollama/qwen3.6:35b-a3b** (unchanged).
+- Cursor CLI: coding/heavy only via `oc-agent` / `oc-web` — not primary.
+- Workflow: one task at a time; plan in `memory/`; ask **¿sigo con la siguiente?**; fresh `oc-agent -p` each coding task.
+- See memory/model-hybrid-setup.md.
 
 ## Session reset (stuck Slack/WhatsApp)
 

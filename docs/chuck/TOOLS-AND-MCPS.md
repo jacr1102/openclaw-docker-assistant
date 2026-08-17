@@ -6,12 +6,12 @@
 Canonical day-to-day agent notes: [`agents/chuck/TOOLS.md`](../../agents/chuck/TOOLS.md).  
 Live inventory export: [`docs/inventory/bins.md`](../inventory/bins.md), [`docs/inventory/mcps.md`](../inventory/mcps.md).
 
-## Cursor CLI
+## Cursor CLI (coding via exec — not chat primary)
 
 - Install: `curl -fsS https://cursor.com/install | bash`
 - Login: `agent login` (or `cursor-agent` login flow)
 - Symlinks: `~/.local/bin/agent` → `cursor-agent` version dir
-- OpenClaw primary chat model: **`cursor-cli/auto`** via `agents.defaults.cliBackends.cursor-cli`
+- OpenClaw **chat** primary is **`ollama/qwen3.6:35b-a3b`**. Cursor CLI is for **`oc-agent` / `oc-web`** only (plugin may stay installed; do not set as `agents.defaults.model.primary`).
 
 Wrappers pin `OC_AGENT_BIN` to a versioned path under `~/.local/share/cursor-agent/versions/…`. After upgrading Cursor CLI, update the pin in `oc-agent` / `oc-gmail-agent` or set `OC_AGENT_BIN`.
 

@@ -18,7 +18,7 @@ http://100.88.86.99:18789     (chucky via Tailscale)
 openclaw-gateway.service      (systemd --user, linger=yes)
         │
         ├── Slack Socket Mode
-        ├── Cursor CLI (cursor-agent)  ← primary model cursor-cli/auto
+        ├── ollama/qwen3.6:35b-a3b  ← chat primary (Cursor via oc-agent)
         ├── oc-* wrappers (~/.local/bin)
         └── Ollama Qwen                ← only agent id `cron`
 ```

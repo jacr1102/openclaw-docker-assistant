@@ -17,7 +17,7 @@
      CGroup: /user.slice/user-1000.slice/user@1000.service/app.slice/openclaw-gateway.service
              └─23332 /home/chucky/.nvm/versions/node/v24.19.0/bin/node /home/chucky/.nvm/versions/node/v24.19.0/lib/node_modules/openclaw/dist/index.js gateway --port 18789
 
-Aug 17 13:21:01 chuck node[23332]: 2026-08-17T13:21:01.151+00:00 [gateway] agent model: cursor-cli/auto (thinking=off, fast=off)
+Aug 17 13:21:01 chuck node[23332]: 2026-08-17T13:21:01.151+00:00 [gateway] agent model: ollama/qwen3.6:35b-a3b (thinking=off, fast=off)
 Aug 17 13:21:01 chuck node[23332]: 2026-08-17T13:21:01.153+00:00 [gateway] http server listening (10 plugins: browser, canvas, device-pair, file-transfer, memory-core, ollama, phone-control, slack, talk-voice, whatsapp; 1.1s)
 Aug 17 13:21:01 chuck node[23332]: 2026-08-17T13:21:01.156+00:00 [gateway] log file: /tmp/openclaw/openclaw-2026-08-17.log
 Aug 17 13:21:01 chuck node[23332]: 2026-08-17T13:21:01.229+00:00 [gateway] starting channels and sidecars...

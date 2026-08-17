@@ -37,7 +37,7 @@ Delegate via **`exec host=gateway`**. **Never** use `~` paths. Prefer **`host=ga
 |-----|-----|
 | **Gmail** (labels / search / drafts / payment-check) | **`/home/chucky/.local/bin/oc-gmail`** — fast Gmail REST (seconds). Examples: `oc-gmail labels --limit 5`, `oc-gmail-search "is:unread"`, `oc-gmail-search --payment-check`. **Do not invent email contents** |
 | **Web / internet research** (news, cartelera, precios, clima, current events, "busca en internet/web") | **`/home/chucky/.local/bin/oc-web "…"`** (Cursor WebSearch/WebFetch via `oc-agent`). **Never invent** live data. **Do not** enable OpenClaw browser |
-| Coding / multi-file edits / repo work | **`/home/chucky/.local/bin/oc-agent`** (or absolute `agent`) with `-p --approve-mcps --trust --force "…"`. Not for routine Gmail or web search |
+| Coding / multi-file edits / repo work | **`/home/chucky/.local/bin/oc-agent`** with **fresh** `-p --approve-mcps --trust --force "…"` per task (no resume). Not for routine Gmail or web search |
 | GitHub | `/usr/bin/gh` on chucky (already authenticated) |
 | VPS admin | `ssh dhaliora '…'` from chucky |
 | **MCSAI live admin** (users / hours / activate-deactivate via API) | **`oc-agent -p --approve-mcps --trust --force --workspace /home/chucky/.openclaw/workspace/repos/mcsai "…"`** using **`mcsai-observability` MCP**. **Never** `sudo` (including `sudo oc-agent`), **never** `useradd`. **Never** GitHub for live product users |
@@ -192,6 +192,8 @@ VPS `sudo` over `ssh dhaliora` is separate and limited; do **not** allowlist loc
 - User can say **stop** or send a new shorter request to abandon a stuck poll.
 
 ## Model routing (2026-08-17)
-- Chat/Slack (agent `main`): **cursor-cli/auto** via OpenClaw plugin `cursor-cli` (Cursor subscription; not OpenAI).
-- Cron: agent id **`cron`** with **ollama/qwen3.6:35b-a3b** — use `openclaw cron add --agent cron` (and/or `--model ollama/qwen3.6:35b-a3b`).
-- Heartbeat stays `0m`. Details: chucky `~/.openclaw/workspace/memory/cursor-primary-setup.md`.
+- Chat/Slack/WhatsApp (agent `main`): **ollama/qwen3.6:35b-a3b** (local Qwen).
+- Cron: agent id **`cron`** with **ollama/qwen3.6:35b-a3b** — use `openclaw cron add --agent cron`.
+- Cursor CLI: via `oc-agent` / `oc-web` only (not chat primary). Heartbeat stays `0m`.
+- Workflow: one task at a time; ask **¿sigo con la siguiente?**; fresh `oc-agent -p` per coding task.
+- Details: `memory/model-hybrid-setup.md` (chucky `~/.openclaw/workspace/memory/model-hybrid-setup.md`).

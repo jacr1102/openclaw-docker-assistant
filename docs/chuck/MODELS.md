@@ -1,30 +1,39 @@
 # Model routing
 
-**ES:** Modelos por agente.  
-**EN:** Which model each agent uses.
+**ES:** Modelos por agente (híbrido).  
+**EN:** Hybrid model routing per agent.
 
-Detail: [`agents/chuck/memory/cursor-primary-setup.md`](../../agents/chuck/memory/cursor-primary-setup.md).  
+Detail: [`agents/chuck/memory/model-hybrid-setup.md`](../../agents/chuck/memory/model-hybrid-setup.md).  
 Agents block in inventory: [`docs/inventory/cron.md`](../inventory/cron.md).
 
 ## Summary
 
 | Agent id | Name | Primary model | When |
 |----------|------|---------------|------|
-| `main` | (default chat) | **`cursor-cli/auto`** | Slack / Control UI / interactive |
+| `main` | (default chat) | **`ollama/qwen3.6:35b-a3b`** | Slack / WhatsApp / Control UI / interactive |
 | `cron` | `cron-qwen` | **`ollama/qwen3.6:35b-a3b`** | OpenClaw cron / `--agent cron` only |
 
-- Chat must **not** fall back to cloud OpenAI for routine work; Cursor subscription drives `cursor-cli/*`.
-- Qwen/Ollama is reserved for the **cron** agent (local MoE), not for day-to-day Slack coding.
-- Heartbeat: disabled (`every: "0m"`) to save credits.
-- `cliBackends.cursor-cli.command`: `/home/chucky/.local/bin/cursor-agent`
+- **Chat primary is local Qwen** (Ollama). Do **not** set `agents.defaults.model.primary` to `cursor-cli/*`.
+- **Cursor CLI** stays installed for coding/heavy work via **`oc-agent` / `oc-web`** (`exec host=gateway`). Plugin `cursor-cli` may remain enabled but is unused as chat primary.
+- Heartbeat: disabled (`every: "0m"`).
+- Optional: `cliBackends.cursor-cli.command` → `/home/chucky/.local/bin/cursor-agent` (for plugin/catalog only when needed).
 
-## Related aliases (available, not primary chat)
+## Workflow (one task at a time)
+
+1. One task at a time; persist the plan in `memory/*.md`.
+2. After each task, ask the user: **¿sigo con la siguiente?**
+3. Each coding task = fresh `oc-agent -p` (no resume accumulation).
+
+## Related aliases (available, not required for chat)
 
 - `ollama/qwen3.6:27b` → `qwen27`
 - `ollama/gpt-oss:20b` → `local-orchestrator`
-- Many `cursor-cli/*` model ids for explicit overrides
+- Many `cursor-cli/*` model ids (optional overrides; not default chat)
 
 ## Ops tips
 
-- Long Cursor CLI turns can stall a session → see [SESSION-RESET.md](./SESSION-RESET.md).
+- Local Qwen chat: prefer `agents.defaults.thinkingDefault: "off"` (and model `params.thinking: false`) so Ollama sends `think: false`; otherwise thinking-only replies can starve content and time out.
+
+- After switching primary models, send **`reset`** or **`new`** once in Slack so the session picks up Qwen.
+- Stuck sessions → [SESSION-RESET.md](./SESSION-RESET.md).
 - Avoid many parallel long `oc-agent` / `cursor-agent` jobs against the same workspace.

@@ -47,7 +47,7 @@ Host `chucky` · source `~/.openclaw/openclaw.json`
     "every": "0m"
   },
   "model": {
-    "primary": "cursor-cli/auto"
+    "primary": "ollama/qwen3.6:35b-a3b"
   }
 }
 ```

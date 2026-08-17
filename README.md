@@ -38,8 +38,8 @@ Usuarios (Slack, browser Control UI)
               │
               ├── Slack Socket Mode (canal principal)
               ├── WhatsApp plugin (instalado; falta vincular QR)
-              ├── cursor-cli/auto  ← modelo primario (Cursor CLI)
-              ├── agent cron → ollama/qwen3.6:35b-a3b
+              ├── ollama/qwen3.6:35b-a3b  ← chat primary (main + cron)
+              ├── Cursor CLI vía oc-agent/oc-web (no primary)
               └── oc-agent, oc-web, oc-gmail*, gh, MCPs
 ```
 
@@ -58,10 +58,10 @@ Más detalle: [docs/chuck/SERVER-SETUP.md](./docs/chuck/SERVER-SETUP.md) · cuto
 
 | Agente | Modelo | Uso |
 |--------|--------|-----|
-| `main` (chat / Slack) | **`cursor-cli/auto`** | Primario — Cursor CLI / suscripción Cursor |
-| `cron` (`cron-qwen`) | **`ollama/qwen3.6:35b-a3b`** | Solo trabajos cron OpenClaw (`--agent cron`) |
+| `main` (chat / Slack / WhatsApp) | **`ollama/qwen3.6:35b-a3b`** | Primario — Qwen local (Ollama) |
+| `cron` (`cron-qwen`) | **`ollama/qwen3.6:35b-a3b`** | Trabajos cron OpenClaw (`--agent cron`) |
 
-Qwen **no** es el modelo de chat diario. Guía: [docs/chuck/MODELS.md](./docs/chuck/MODELS.md)
+Cursor CLI **no** es el chat primario; coding/heavy vía `oc-agent` / `oc-web`. Guía: [docs/chuck/MODELS.md](./docs/chuck/MODELS.md)
 
 ---
 
@@ -156,7 +156,7 @@ Usa plantillas: `.env.example`, `deploy/*.example`, `gmail-aliases.json.example`
 | [docs/chuck/SERVER-SETUP.md](./docs/chuck/SERVER-SETUP.md) | Topología, Tailscale, VPS, systemd, backup |
 | [docs/chuck/TOOLS-AND-MCPS.md](./docs/chuck/TOOLS-AND-MCPS.md) | oc-*, Cursor, Gmail, MCPs |
 | [docs/chuck/SESSION-RESET.md](./docs/chuck/SESSION-RESET.md) | `reset` / `new` |
-| [docs/chuck/MODELS.md](./docs/chuck/MODELS.md) | cursor-cli vs Qwen cron |
+| [docs/chuck/MODELS.md](./docs/chuck/MODELS.md) | Hybrid Qwen chat + Cursor via exec |
 | [docs/inventory/](./docs/inventory/) | Snapshot bins, mcps, plugins, cron, systemd, config redacted |
 | [docs/migration-chucky-notes.md](./docs/migration-chucky-notes.md) | Cutover VPS → chucky + rollback |
 | [agents/chuck/](./agents/chuck/) | Personalidad, tools, skills, wrappers |
