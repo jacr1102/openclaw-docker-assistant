@@ -6,6 +6,37 @@ Para **`gh`** (issues, API, repos), usa **GitHub CLI en un nodo** — por ejempl
 
 Si en el servidor tenías **`GH_TOKEN`** solo para `gh` en Docker, puedes quitarlo de **`.env.prod`** y del entorno del compose.
 
+Si **`exec`** dice que no existe **`/opt/homebrew/bin/gh`** pero en el Mac **`command -v gh`** sí funciona, casi seguro el comando se ejecutó en **`host=sandbox`** (por defecto), no en el nodo. En Control UI: **`/exec host=node`** (y **`node=…`** si hay varios) o configura **`tools.exec.host=node`** para el agente. Luego vuelve a probar.
+
+Si el fallo persiste **con `host=node`**, en el Mac comprueba la ruta real: **`command -v gh`**. Apple Silicon suele usar **`/opt/homebrew`**; Intel a veces **`/usr/local/bin/gh`**. Sin binario: **`brew install gh`** y **`gh auth login`** en esa máquina.
+
+### `SYSTEM_RUN_DENIED: approval requires an existing canonical cwd`
+
+La aprobación de **`exec` resuelve el `workdir` en el filesystem del gateway** (el contenedor Linux), no en el Mac. Si pones **`/Users/...`**, dentro del contenedor **no existe** → sigue fallando el “canonical cwd”.
+
+**Workspace ya configurado en el deploy:** en `docker-compose.prod.yml` el volumen **`OPENCLAW_WORKSPACE_DIR`** se monta como **`/home/node/.openclaw/workspace`** dentro del gateway. Esa es la ruta “oficial” del workspace **vista por el proceso del gateway**.
+
+1. En el **VPS**, comprueba que el directorio existe **dentro del contenedor**:
+   ```bash
+   docker compose -f docker-compose.prod.yml exec openclaw-gateway sh -c 'test -d /home/node/.openclaw/workspace && echo OK'
+   ```
+2. En Control UI, con **`/exec host=node`** (y **`security`/`ask`** como ya uses), pide un **`exec`** con:
+   - **`workdir`:** **`/home/node/.openclaw/workspace`** (ruta **dentro del contenedor**, no `/Users/...`)
+   - **`command`:** p. ej. `/opt/homebrew/bin/gh issue list --repo jacr1102/mcsai --limit 5`
+
+Texto listo para pegar:
+
+```text
+Ejecuta con exec: host=node, workdir=/home/node/.openclaw/workspace, command: /opt/homebrew/bin/gh issue list --repo jacr1102/mcsai --limit 5
+```
+
+OpenClaw debería enlazar ese plan con el workspace del agente y reenviarlo al nodo; el nodo ejecuta en **su** sistema con la lógica interna del producto (si el binario sigue en el Mac, no hace falta que exista `/home/node/...` en macOS).
+
+**¿Config fija “por defecto”?** En la doc pública de `exec` no hay un `tools.exec.workdir` global permanente; el workspace del agente viene de **`OPENCLAW_WORKSPACE_DIR`** + config de agentes. Para defaults de sesión sigue siendo **`/exec`** en el chat o **`tools.exec.host` / `tools.exec.node`** por agente. Si quieres ver qué tiene el gateway:  
+`docker compose exec openclaw-gateway openclaw config get` (o revisa `openclaw.json` bajo **`OPENCLAW_CONFIG_DIR`**).
+
+Si **incluso con `workdir=/home/node/.openclaw/workspace`** falla igual, es muy probable el bug upstream **`resolveWorkdir` / nodo remoto**; toca **actualizar OpenClaw** o **GitHub/API en el gateway** mientras tanto.
+
 ---
 
 ## Nodo Mac: `node.err.log` y WebSocket al gateway

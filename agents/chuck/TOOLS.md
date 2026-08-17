@@ -194,13 +194,13 @@ When the human is in one of these Slack channels (or clearly referring to it), u
 - Heartbeat disabled (`agents.defaults.heartbeat.every: "0m"`) to save API credits.
 - VPS (`assistant.dhalia.fun` / `server2`) is Nginx TLS edge + rollback data; OpenClaw container stays **stopped**.
 
+
 ### MCSAI MySQL backup (chucky)
 
 - Script: `/home/chucky/bin/mcsai-backup-remote.sh` — dumps prod hosting MySQL to `/home/chucky/Backups/mcsai-remote/`.
-- Secrets only in `/home/chucky/.config/mcsai-backup/backup.conf` (mode `600`). Never print or commit.
+- Secrets only in `/home/chucky/.config/mcsai-backup/backup.conf` (mode `600`). Never print or commit. Repo copy: `scripts/mcsai-backup-remote.sh`.
 - Crontab (user `chucky`): `5 8,17 * * *` → `~/logs/mcsai-cron.log`.
-- Mac still runs the same backup (crontab + LaunchAgent) until chucky is verified — do not disable Mac.
-- Details: `/home/chucky/Backups/mcsai-remote/README.md` and `docs/migration-chucky-notes.md`.
+- Details: `docs/migration-chucky-notes.md` and `docs/chuck/SERVER-SETUP.md`.
 
 ## VPS access from chucky (SSH + limited sudo)
 
@@ -228,3 +228,17 @@ When the human is in one of these Slack channels (or clearly referring to it), u
 ---
 
 Add SSH host **aliases** (non-sensitive), service names, or glossary terms only if they help day-to-day.
+
+## Model routing (2026-08-17)
+- Chat/Slack (agent `main`): **cursor-cli/auto** (Cursor subscription; not OpenAI).
+- Cron (use `--agent cron`): **ollama/qwen3.6:35b-a3b** only.
+- See memory/cursor-primary-setup.md.
+
+## Session reset (stuck Slack/WhatsApp)
+
+User self-serve: type exactly **`reset`** or **`new`** (whole message). Not `hola`.
+
+Slack slash `/new` often never reaches OpenClaw — use plain `reset`/`new`, or register `/new`+`/reset` in the Slack app, or use `/openclaw /new` if `/openclaw` is registered.
+
+Backup CLI (allowlisted): `/home/chucky/.local/bin/oc-reset-session --dm` or `--list` / `--key <key>`.
+Details: `memory/session-reset.md`.

@@ -11,14 +11,17 @@ data/
 .env
 .env.*
 !.env.example
+!**/.env.example
+!**/env*.example
 
-# Live OpenClaw / MCP configs with tokens (commit *.example only)
+# Live OpenClaw / MCP configs with tokens (commit *.example / redacted inventory only)
 openclaw.json
 **/openclaw.json
 mcp.json
 **/mcp.json
 !**/*.example.json
 !**/*.json.example
+!docs/inventory/openclaw.config.redacted.json5
 
 # OAuth / device auth / tokens (never commit)
 **/*token*
@@ -27,10 +30,21 @@ mcp.json
 **/.mcp-auth/
 **/device-auth*
 **/*slack*token*
+**/gateway.systemd.env
 
 # Live gmail aliases (commit gmail-aliases.json.example only)
 **/gmail-aliases.json
 !**/gmail-aliases.json.example
+
+# MCSAI backup secrets
+**/backup.conf
+**/.config/mcsai-backup/
+**/mcsai-backup/**/backup.conf
+
+# Backups that may contain secrets
+*.bak
+*.bak.*
+**/*.clobbered.*
 
 # Mac node launcher (copy from scripts/mac-node.env.example)
 scripts/mac-node.env

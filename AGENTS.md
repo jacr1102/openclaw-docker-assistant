@@ -29,7 +29,7 @@ When the human pastes/attaches a **tech gate** and says things like **“trabaja
 
 Channel map for normal bugs/PRs (unchanged): `#mc-sai` → `mcsai`, `#dhaliora` → `digital-message-platform`.
 
-## Prefer fast tools + Cursor CLI (save OpenAI tokens)
+## Prefer fast tools + Cursor CLI (save subscription tokens)
 
 Delegate via **`exec host=gateway`**. **Never** use `~` paths. Prefer **`host=gateway`**; do not use disconnected `host=node`.
 
@@ -183,10 +183,15 @@ VPS `sudo` over `ssh dhaliora` is separate and limited; do **not** allowlist loc
 
 - For Gmail ALWAYS: `exec host=gateway` → `/home/chucky/.local/bin/oc-gmail labels|search|drafts|payment-check …` (or `oc-gmail-search …`). Hard 120s timeout built in.
 - Payments / admin / property asks: prefer `oc-gmail-search --payment-check` or `--multi …` first; see **TOOLS.md** Gmail playbook. Don't ask for aliases already in `USER.md`.
-- **Web / internet research ALWAYS:** for news, showtimes/cartelera, prices, weather, current events, or any "busca en internet/web" ask → `exec host=gateway` → `/home/chucky/.local/bin/oc-web "<query>"` (preferred) or `/home/chucky/.local/bin/oc-agent -p --approve-mcps --trust --force "Busca en la web: <query>. Resume fuentes y datos clave."`. Cursor does WebSearch/WebFetch; **OpenClaw only summarizes** tool output. **Never invent** live data from the OpenAI model. **Never** enable or use the OpenClaw `browser` plugin for this. Ask the user only if `oc-web`/`oc-agent` fails **twice**.
+- **Web / internet research ALWAYS:** for news, showtimes/cartelera, prices, weather, current events, or any "busca en internet/web" ask → `exec host=gateway` → `/home/chucky/.local/bin/oc-web "<query>"` (preferred) or `/home/chucky/.local/bin/oc-agent -p --approve-mcps --trust --force "Busca en la web: <query>. Resume fuentes y datos clave."`. Cursor does WebSearch/WebFetch; **OpenClaw only summarizes** tool output. **Never invent** live data from a generic cloud LLM. **Never** enable or use the OpenClaw `browser` plugin for this. Ask the user only if `oc-web`/`oc-agent` fails **twice**.
 - For coding: `/home/chucky/.local/bin/oc-agent -p --approve-mcps --trust --force "…"`
 - **MCSAI live admin ALWAYS:** users/hours/activate via **`oc-agent --approve-mcps`** + workspace **`/home/chucky/.openclaw/workspace/repos/mcsai`** + MCP **`mcsai-observability`**. **Not** OS `useradd`/`sudo`, **not** `gh`.
 - **Never** route routine Gmail through Cursor `agent -p` / MCP. **Never** `~/.local/bin/agent`. **Never** `host=node`.
 - If `exec` returns “Command still running (session …)”, **poll once**; if it already printed labels/threads/research, **answer immediately** — do not ask the user whether to keep polling.
 - If a previous turn used `/exec host=node`, reset session defaults — do not keep using node.
 - User can say **stop** or send a new shorter request to abandon a stuck poll.
+
+## Model routing (2026-08-17)
+- Chat/Slack (agent `main`): **cursor-cli/auto** via OpenClaw plugin `cursor-cli` (Cursor subscription; not OpenAI).
+- Cron: agent id **`cron`** with **ollama/qwen3.6:35b-a3b** — use `openclaw cron add --agent cron` (and/or `--model ollama/qwen3.6:35b-a3b`).
+- Heartbeat stays `0m`. Details: chucky `~/.openclaw/workspace/memory/cursor-primary-setup.md`.
