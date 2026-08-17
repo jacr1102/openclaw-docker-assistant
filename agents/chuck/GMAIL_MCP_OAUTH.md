@@ -41,7 +41,7 @@ Prefer the fast REST CLI (no Cursor agent):
 
 ```bash
 ssh chucky '/home/chucky/.local/bin/oc-gmail labels --limit 5'
-ssh chucky '/home/chucky/.local/bin/oc-gmail-search "newer_than:2d" --limit 3'
+ssh chucky '/home/chucky/.local/bin/oc-gmail search "newer_than:2d" --limit 3'
 ```
 
 Optional MCP/agent check (slow; not used by OpenClaw for routine Gmail):
@@ -116,3 +116,7 @@ OpenClaw / Chuck should invoke `agent` on the gateway host (chucky). Email never
 - Do not invent email contents — use MCP output only.
 - Re-run the login helper if refresh tokens are revoked or `~/.mcp-auth` is wiped.
 - Do **not** configure Gmail MCP in Mac Cursor Desktop as OpenClaw’s path; keep Mac Desktop Gmail (if any) separate from Chuck.
+
+## Slack / OpenClaw auto-routing
+
+After tokens exist, Slack Chuck must use **`exec host=gateway` → `/home/chucky/.local/bin/oc-gmail search "…" --limit N`** automatically (no “use cursor” required). Never claim Gmail works until that command succeeds. See `AGENTS.md` / `TOOLS.md` → **Gmail auto-routing**.

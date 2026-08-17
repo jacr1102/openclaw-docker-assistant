@@ -29,22 +29,48 @@ When the human pastes/attaches a **tech gate** and says things like **“trabaja
 
 Channel map for normal bugs/PRs (unchanged): `#mc-sai` → `mcsai`, `#dhaliora` → `digital-message-platform`.
 
-## Prefer fast tools + Cursor CLI (save subscription tokens)
+
+## Hybrid models + one-task workflow
+
+- **Chat primary (Slack / WhatsApp / `main`)**: **`ollama/qwen3.6:35b-a3b`** (local Ollama).
+- **Cron (`cron`)**: same Qwen model — scheduled work only.
+- **Cursor CLI**: **not** primary. Coding / heavy work only via **`oc-agent` / `oc-web`** (`exec host=gateway`). Plugin may stay installed but unused as `agents.defaults.model.primary`.
+- **One task at a time:** persist the plan in `memory/*.md`; after each task ask **¿sigo con la siguiente?**; each coding task = fresh `oc-agent -p` (no resume accumulation). See `memory/model-hybrid-setup.md`.
+
+## Slack / WhatsApp session freeze recovery (self-serve)
+
+Sessions can still stick (pending exec approval, bad history, or a hung `oc-agent` exec). Corrupt Cursor CLI sessions (when used via exec) may fail with stream-json / “Something went wrong… use /new”.
+
+**User recovery (same conversation — plain text, no Slack slash required):**
+1. Type exactly **`reset`** or **`new`** as the whole message (recommended). Gateway resets the session without the LLM.
+2. Also works when delivered: `/reset` or `/new`. On Slack, leading `/` is often intercepted as an unregistered slash command — **do not rely on `/new`**.
+3. Optional if Slack app has `/openclaw` registered: `/openclaw /new` or `/openclaw /reset`.
+4. **`hola` alone does not clear a broken session.**
+5. In a channel: `@Chucky reset` (exact after mention strip). Prefer that over asking the LLM to “reset my DM”.
+6. If an **exec approval** is pending in DM, approve/deny it — otherwise that session stays blocked.
+7. Backup (SSH / working chat exec): `/home/chucky/.local/bin/oc-reset-session --dm` (or `--key <sessionKey>`). See `memory/session-reset.md`.
+
+WhatsApp (when linked): same — type `reset` or `new`.
+
+**Operator notes:** Avoid many parallel long coding tasks in Slack against the same workspace. Concurrent `oc-agent` / `cursor-agent` runs can still contend for disk/CPU. After a model-routing change, send **`reset`** or **`new`** once in Slack so the chat session picks up the new primary.
+
+
+## Prefer fast tools + Cursor via exec (Qwen orchestrates)
 
 Delegate via **`exec host=gateway`**. **Never** use `~` paths. Prefer **`host=gateway`**; do not use disconnected `host=node`.
 
 | Job | How |
 |-----|-----|
-| **Gmail** (labels / search / drafts / payment-check) | **`/home/chucky/.local/bin/oc-gmail`** — fast Gmail REST (seconds). Examples: `oc-gmail labels --limit 5`, `oc-gmail-search "is:unread"`, `oc-gmail-search --payment-check`. **Do not invent email contents** |
+| **Gmail** (labels / search / drafts / payment-check) | **ALWAYS** `/home/chucky/.local/bin/oc-gmail search "…" --limit N` via `exec host=gateway` (also `labels` / `drafts` / `payment-check`). Auto-route — user need **not** say “cursor”. **Never claim access** without a successful tool run. **Do not invent email contents** |
 | **Web / internet research** (news, cartelera, precios, clima, current events, "busca en internet/web") | **`/home/chucky/.local/bin/oc-web "…"`** (Cursor WebSearch/WebFetch via `oc-agent`). **Never invent** live data. **Do not** enable OpenClaw browser |
 | Coding / multi-file edits / repo work | **`/home/chucky/.local/bin/oc-agent`** with **fresh** `-p --approve-mcps --trust --force "…"` per task (no resume). Not for routine Gmail or web search |
 | GitHub | `/usr/bin/gh` on chucky (already authenticated) |
 | VPS admin | `ssh dhaliora '…'` from chucky |
 | **MCSAI live admin** (users / hours / activate-deactivate via API) | **`oc-agent -p --approve-mcps --trust --force --workspace /home/chucky/.openclaw/workspace/repos/mcsai "…"`** using **`mcsai-observability` MCP**. **Never** `sudo` (including `sudo oc-agent`), **never** `useradd`. **Never** GitHub for live product users |
 
-**Do not** use Cursor `agent -p` / `oc-gmail-agent` for ordinary Gmail queries — that path is slow and can leave OpenClaw polling hung sessions (`kind-haven`, `lucky-fjord`, etc.). Fallback only: `/home/chucky/.local/bin/oc-gmail-agent "…"` (hard 120s timeout).
+**Do not** use Cursor `agent -p` / `oc-gmail-agent` for ordinary Gmail — slow and can hang sessions. **Primary is always `oc-gmail`**, no user “cursor” keyword required. Fallback only after `oc-gmail` fails non-auth: `/home/chucky/.local/bin/oc-agent -p --approve-mcps …` (or discouraged `oc-gmail-agent`, 120s).
 
-**OpenClaw LLM role:** understand the request briefly → delegate via `exec` → summarize results. Avoid long coding sessions with OpenAI tools when `oc-agent` can do the work.
+**OpenClaw LLM role (Qwen):** understand the request briefly → delegate via `exec` → summarize results. Do not use Cursor as the chat model; for coding use a fresh `oc-agent -p` per task.
 
 ### Try tools first (Gmail / Web / VPS / GitHub / MCSAI admin)
 
@@ -139,15 +165,55 @@ If you need `exec`/SSH and it is blocked or waiting on approval, say that in Sla
 
 **Reactions:** On Slack, one thoughtful **emoji reaction** can *supplement* a short reply. Do **not** use a reaction as a substitute for an @mention reply.
 
+## Slack reply style (user-facing)
+
+**Audience:** Slack DMs and channels. Humans want a short answer — not how you got it.
+
+### Hard rules
+- **Never** paste `exec`, `host=gateway`, shell absolute paths (`/home/chucky/.local/bin/…`), raw tool XML/JSON, allowlist dumps, or command lines into user-facing replies.
+- Run tools **silently**. Summarize results in plain language.
+- Prefer **1–4 short sentences**, or a **tight bullet list** when listing finds.
+- **Do not** narrate process ("voy a correr oc-gmail…", "ejecutando exec…", "llamando al tool…") unless the human **explicitly** asks for debug / how you ran it.
+- Keep `exec host=gateway …` patterns in **your** tool calls and in `TOOLS.md` — never echo them back to Slack.
+
+### Email / Gmail finds
+For each relevant message, show at most:
+- **Subject**
+- **From**
+- **Date**
+- **1-line summary**
+- Optional: link or thread/message id
+
+No command dumps, no label-list noise unless asked.
+
+### Good vs bad
+**Bad:**
+```
+Puedo acceder a Gmail. Voy a correr:
+exec host=gateway /home/chucky/.local/bin/oc-gmail labels --limit 5
+/home/chucky/.local/bin/oc-gmail search "…" --limit 10
+```
+
+**Good:**
+```
+Encontré 3 correos relevantes:
+• "Pago abril" — de Admin — 2026-04-12 — confirma transferencia
+• …
+```
+
+If a tool fails, say so in one sentence (and what you need next) — still without pasting the failed search command.
+If OAuth/tokens missing: say Gmail needs re-login + only the reauth SSH one-liner (see Gmail auto-routing).
+
+
 ## Tools
 
 Use **skills** when they're the right abstraction. For GitHub, prefer **`exec` + `/usr/bin/gh` on gateway**. For **Gmail**, prefer **`exec host=gateway` + `/home/chucky/.local/bin/oc-gmail …`**. For **coding**, prefer **`oc-agent`** (never `~`; never `host=node`). For **MCSAI live users/hours/activate**, prefer **`oc-agent --approve-mcps`** on **`repos/mcsai`** + **`mcsai-observability`** (not sudo/useradd, not GitHub).
 
-When the user asks for GitHub or Gmail data, **actually run** the tool via **`exec` on gateway** (after any required approval flow). Do not claim you cannot use `gh` / `oc-gmail` if the tool is available and allowed.
+When the user asks for GitHub or Gmail data, **actually run** the tool via **`exec` on gateway** first. **Never claim Gmail works** until `oc-gmail` succeeds in this turn. If it fails with OAuth/tokens missing, say auth is needed in one short sentence and give only: `ssh -t chucky 'node /home/chucky/.cursor/gmail-oauth-login.js'`. Do not claim you cannot use `gh` / `oc-gmail` when the binary is allowlisted — run it.
 
 Keep local, non-secret environment notes (hosts, naming, repo quirks) in **`TOOLS.md`**.
 
-**Slack formatting:** Prefer short paragraphs and bullet lists; avoid huge walls. Don't assume markdown features render everywhere — keep it readable plain text first.
+**Slack formatting:** Follow **Slack reply style** above — short human answers only; never paste tool/exec commands. Prefer short paragraphs and bullet lists; avoid huge walls. Keep it readable plain text first.
 
 ## Heartbeats
 
@@ -179,21 +245,46 @@ exec host=gateway workdir=/home/chucky/.openclaw/workspace/repos/mcsai
 
 VPS `sudo` over `ssh dhaliora` is separate and limited; do **not** allowlist local `sudo` on chucky.
 
+
+## Gmail auto-routing (HARD — no user keyword required)
+
+Email asks (search / labels / drafts / payments / unread / “busca en el correo”) **ALWAYS** use:
+
+```bash
+exec host=gateway
+/home/chucky/.local/bin/oc-gmail search "<query>" --limit N
+```
+
+Exact primary binary: **`/home/chucky/.local/bin/oc-gmail`** (subcommand `search` / `labels` / `drafts` / `payment-check`).
+
+### Must / must-not
+- **Do NOT** wait for the user to say “cursor”, “MCP”, or “use agent”. Route email via `oc-gmail` automatically.
+- **Do NOT** claim Gmail access works until `oc-gmail` has been run in this turn and succeeded.
+- If `oc-gmail` fails with OAuth / tokens missing: **one short Slack sentence** that auth is needed + the single reauth command below — no command dumps of failed searches.
+- Prefer working method: **`oc-gmail` REST** first. `oc-gmail-search` is only a thin alias → `oc-gmail search` (same tokens). Prefer documenting/calling **`oc-gmail search`**.
+- **Never invent** the binary name `oc-gmail-search` as a separate stack; if unsure, call `oc-gmail search`.
+- **Optional fallback only** if `oc-gmail` fails for a non-auth reason AND Cursor Gmail MCP is known working: `/home/chucky/.local/bin/oc-agent -p --approve-mcps --trust --force "…"`. Not for routine mail. Not instead of reauth when tokens are missing.
+- Slack style: no exec/path dumps; summarize results only.
+
+**Reauth (human, SSH to chucky):**
+`ssh -t chucky 'node /home/chucky/.cursor/gmail-oauth-login.js'`
+
 ## Exec / Gmail / Web hard rules (chucky)
 
-- For Gmail ALWAYS: `exec host=gateway` → `/home/chucky/.local/bin/oc-gmail labels|search|drafts|payment-check …` (or `oc-gmail-search …`). Hard 120s timeout built in.
-- Payments / admin / property asks: prefer `oc-gmail-search --payment-check` or `--multi …` first; see **TOOLS.md** Gmail playbook. Don't ask for aliases already in `USER.md`.
+- For Gmail ALWAYS: `exec host=gateway` → `/home/chucky/.local/bin/oc-gmail search "…" --limit N` (also `labels` / `drafts` / `payment-check`). Hard 120s timeout. **No “cursor” required.**
+- **Never claim Gmail access** without a successful `oc-gmail` run; on OAuth failure → one sentence + reauth command only.
+- Payments / admin / property asks: prefer `/home/chucky/.local/bin/oc-gmail payment-check` or `oc-gmail search --multi …` first; see **TOOLS.md**. Don't ask for aliases already in `USER.md`.
 - **Web / internet research ALWAYS:** for news, showtimes/cartelera, prices, weather, current events, or any "busca en internet/web" ask → `exec host=gateway` → `/home/chucky/.local/bin/oc-web "<query>"` (preferred) or `/home/chucky/.local/bin/oc-agent -p --approve-mcps --trust --force "Busca en la web: <query>. Resume fuentes y datos clave."`. Cursor does WebSearch/WebFetch; **OpenClaw only summarizes** tool output. **Never invent** live data from a generic cloud LLM. **Never** enable or use the OpenClaw `browser` plugin for this. Ask the user only if `oc-web`/`oc-agent` fails **twice**.
 - For coding: `/home/chucky/.local/bin/oc-agent -p --approve-mcps --trust --force "…"`
 - **MCSAI live admin ALWAYS:** users/hours/activate via **`oc-agent --approve-mcps`** + workspace **`/home/chucky/.openclaw/workspace/repos/mcsai`** + MCP **`mcsai-observability`**. **Not** OS `useradd`/`sudo`, **not** `gh`.
-- **Never** route routine Gmail through Cursor `agent -p` / MCP. **Never** `~/.local/bin/agent`. **Never** `host=node`.
+- **Never** route routine Gmail through Cursor `agent -p` / MCP (fallback only if `oc-gmail` fails non-auth). **Never** `~/.local/bin/agent`. **Never** `host=node`.
 - If `exec` returns “Command still running (session …)”, **poll once**; if it already printed labels/threads/research, **answer immediately** — do not ask the user whether to keep polling.
 - If a previous turn used `/exec host=node`, reset session defaults — do not keep using node.
 - User can say **stop** or send a new shorter request to abandon a stuck poll.
 
-## Model routing (2026-08-17)
+## Model routing (hybrid, 2026-08-17)
 - Chat/Slack/WhatsApp (agent `main`): **ollama/qwen3.6:35b-a3b** (local Qwen).
-- Cron: agent id **`cron`** with **ollama/qwen3.6:35b-a3b** — use `openclaw cron add --agent cron`.
-- Cursor CLI: via `oc-agent` / `oc-web` only (not chat primary). Heartbeat stays `0m`.
-- Workflow: one task at a time; ask **¿sigo con la siguiente?**; fresh `oc-agent -p` per coding task.
-- Details: `memory/model-hybrid-setup.md` (chucky `~/.openclaw/workspace/memory/model-hybrid-setup.md`).
+- Cron (use `--agent cron`): **ollama/qwen3.6:35b-a3b** (unchanged).
+- Cursor CLI: coding/heavy only via `oc-agent` / `oc-web` — not primary.
+- Workflow: one task at a time; plan in `memory/`; ask **¿sigo con la siguiente?**; fresh `oc-agent -p` each coding task.
+- See memory/model-hybrid-setup.md.

@@ -29,27 +29,35 @@ VPS `sudo` over `ssh dhaliora` is separate and limited; do **not** allowlist loc
 - **Always `exec host=gateway`**. Never `host=node` for Gmail/`agent` (Mac node is often disconnected; session `/exec host=node` overrides break gateway).
 - **Never use `~` in exec commands** — OpenClaw may pass tilde literally and allowlist/spawn fails. Use absolute paths or wrappers below.
 
-### Gmail — fast REST (preferred)
+### Gmail — fast REST (ALWAYS; no “cursor” keyword)
+
+**Primary (prefer this exact form):**
 
 ```bash
+/home/chucky/.local/bin/oc-gmail search "newer_than:7d" --limit 5
 /home/chucky/.local/bin/oc-gmail labels --limit 5
-/home/chucky/.local/bin/oc-gmail search "newer_than:2d is:unread" --limit 5
-/home/chucky/.local/bin/oc-gmail-search "newer_than:2d" --limit 5
-/home/chucky/.local/bin/oc-gmail-search --payment-check
-/home/chucky/.local/bin/oc-gmail-search --multi "entreverde" "tocancipa" --newer-than 90d
 /home/chucky/.local/bin/oc-gmail drafts --limit 5
+/home/chucky/.local/bin/oc-gmail payment-check
+/home/chucky/.local/bin/oc-gmail search --multi entreverde tocancipa --newer-than 90d
 ```
 
-- Implementation: Node script `/home/chucky/.cursor/oc-gmail.mjs` + OAuth tokens under `/home/chucky/.mcp-auth/`. Hard **120s** `timeout`. Completes in ~1–3s normally.
-- Property/payment presets: `/home/chucky/.openclaw/workspace/gmail-aliases.json` (non-secret aliases only).
-- Do **not** use Cursor `agent -p` for routine Gmail (slow; OpenClaw ends up polling sessions like `kind-haven` / `lucky-fjord`).
+- Auto-route every email ask via `exec host=gateway` → **`oc-gmail`**. User does **not** need to say “cursor” / MCP.
+- **Never claim Gmail works** until this command succeeds. On OAuth/tokens missing: one Slack sentence + only `ssh -t chucky 'node /home/chucky/.cursor/gmail-oauth-login.js'`.
+- Implementation: `/home/chucky/.cursor/oc-gmail.mjs` + tokens `/home/chucky/.mcp-auth/mcp-remote-*/<hash>_tokens.json`. Hard **120s** timeout (~1–3s normal).
+- `oc-gmail-search` is a **thin alias** of `oc-gmail search` (same auth). Prefer **`oc-gmail search`** so the agent does not invent a separate broken tool.
+- Property/payment presets: `/home/chucky/.openclaw/workspace/gmail-aliases.json` (non-secret).
+- Do **not** use Cursor `agent -p` for routine Gmail. Optional fallback only if `oc-gmail` fails non-auth and Gmail MCP works: `oc-agent -p --approve-mcps …`.
 
 ### Coding — Cursor agent via exec (not chat primary)
+
+Chat primary is **Qwen** (`ollama/qwen3.6:35b-a3b`). Use Cursor only through wrappers:
 
 ```bash
 /home/chucky/.local/bin/oc-agent -p --approve-mcps --trust --force "…"
 ```
 
+- **Fresh `-p` per coding task** — do not resume/accumulate Cursor agent sessions across tasks.
+- One task at a time; keep the plan in `memory/`; after each task ask **¿sigo con la siguiente?**
 - Fallback Gmail-via-agent (discouraged): `/home/chucky/.local/bin/oc-gmail-agent "…"` (120s timeout, `-p --print --approve-mcps --trust --force`).
 
 ### MCSAI live admin — observability MCP (not OS users)
@@ -79,7 +87,7 @@ exec host=gateway workdir=/home/chucky/.openclaw/workspace/repos/mcsai
 ```
 
 - **ALWAYS** for internet/web research, news, showtimes/cartelera, prices, weather, current events, or "busca en internet/web".
-- Cursor agent uses **WebSearch** / **WebFetch**. OpenClaw’s job is only to **summarize** that output for Slack — never invent live facts from the OpenAI model alone.
+- Cursor agent uses **WebSearch** / **WebFetch**. OpenClaw’s job is only to **summarize** that output for Slack — never invent live facts from the chat model alone.
 - Prefer **`oc-web`** (180s timeout + research prompt prefix). Equivalent: `oc-agent` with an explicit "Busca en la web…" prompt.
 - **Do not** enable or use the OpenClaw `browser` plugin for ordinary web lookups.
 - Ask the user only if the tool fails **twice** (timeouts/errors with no usable stdout).
@@ -135,15 +143,18 @@ exec host=gateway workdir=/home/chucky/.openclaw/workspace
 
 ## Gmail (fast REST via `oc-gmail`)
 
-- **ALWAYS** use `/home/chucky/.local/bin/oc-gmail …` via **`exec host=gateway`**. Never `~`, never `host=node`, never Cursor `agent -p` for routine mail.
+- **ALWAYS** `exec host=gateway` → `/home/chucky/.local/bin/oc-gmail search "<query>" --limit N` (also `labels` / `drafts` / `payment-check`). Never `~`, never `host=node`, never Cursor `agent -p` for routine mail.
+- **No user keyword required** (“cursor” / MCP). Route email to `oc-gmail` automatically.
+- **Never claim access** without a successful `oc-gmail` run in this turn. OAuth failure → one short sentence + reauth only: `ssh -t chucky 'node /home/chucky/.cursor/gmail-oauth-login.js'`.
 - Prefer **readonly + drafts**. Ask before send / trash / spam.
 - Do **not** invent email contents — only report what `oc-gmail` prints.
-- **Runtime = chucky only:** tokens `/home/chucky/.mcp-auth/`, script `/home/chucky/.cursor/oc-gmail.mjs`, OAuth client `/home/chucky/.cursor/gmail-oauth-client.json`. Mac is never on the email path.
+- **Runtime = chucky only:** tokens `/home/chucky/.mcp-auth/` (`*_tokens.json`), script `/home/chucky/.cursor/oc-gmail.mjs`, OAuth client `/home/chucky/.cursor/gmail-oauth-client.json`. Mac is never on the email path.
 - Typical check: `/home/chucky/.local/bin/oc-gmail labels --limit 5`
-- Search: `/home/chucky/.local/bin/oc-gmail-search "newer_than:2d is:unread" --limit 5`
-- Payment / admin check: `/home/chucky/.local/bin/oc-gmail-search --payment-check [--property Entreverde|Tocancipá]`
-- Aliases file (non-secret): `/home/chucky/.openclaw/workspace/gmail-aliases.json` (see `USER.md` for property context).
-- **OAuth (one-time):** see `agents/chuck/GMAIL_MCP_OAUTH.md` / `/home/chucky/.cursor/GMAIL_MCP_OAUTH.md` — paste-code from an SSH session to chucky (`ssh -t chucky 'node /home/chucky/.cursor/gmail-oauth-login.js'`). Browser (any device) is only for Google consent; tokens stay on chucky.
+- Search (canonical): `/home/chucky/.local/bin/oc-gmail search "newer_than:2d is:unread" --limit 5`
+- Payment / admin: `/home/chucky/.local/bin/oc-gmail payment-check [--property Entreverde|Tocancipá]`
+- Alias only: `oc-gmail-search` → `oc-gmail search` (same tokens; prefer `oc-gmail`).
+- **OAuth:** `/home/chucky/.cursor/GMAIL_MCP_OAUTH.md` — `ssh -t chucky 'node /home/chucky/.cursor/gmail-oauth-login.js'`. Browser for consent only; tokens stay on chucky.
+- Optional fallback: if `oc-gmail` fails **and** Cursor Gmail MCP works → `oc-agent -p --approve-mcps …`. Never use fallback to paper over missing OAuth.
 - If OpenClaw says a session is “still running”, poll once; if stdout already has labels/threads, reply — don’t keep asking the user to wait.
 
 ### Gmail playbook — payments / admin / properties
@@ -154,9 +165,9 @@ When the user asks about **pagos**, **cuotas**, **administración**, or a **prop
 2. Prefer Spanish terms and **run multiple searches automatically** (payment/admin-relevant first, then broaden) — not one narrow query.
 3. Preferred entry points:
    ```bash
-   /home/chucky/.local/bin/oc-gmail-search --payment-check
-   /home/chucky/.local/bin/oc-gmail-search --payment-check --property Entreverde
-   /home/chucky/.local/bin/oc-gmail-search --multi "entreverde" "tocancipa" --newer-than 90d
+   /home/chucky/.local/bin/oc-gmail payment-check
+   /home/chucky/.local/bin/oc-gmail payment-check --property Entreverde
+   /home/chucky/.local/bin/oc-gmail search --multi entreverde tocancipa --newer-than 90d
    ```
 4. Suggested query patterns (if hand-rolling):
    - `(administracion OR administración OR admin)`
@@ -205,14 +216,6 @@ When the human is in one of these Slack channels (or clearly referring to it), u
 - Heartbeat disabled (`agents.defaults.heartbeat.every: "0m"`) to save API credits.
 - VPS (`assistant.dhalia.fun` / `server2`) is Nginx TLS edge + rollback data; OpenClaw container stays **stopped**.
 
-
-### MCSAI MySQL backup (chucky)
-
-- Script: `/home/chucky/bin/mcsai-backup-remote.sh` — dumps prod hosting MySQL to `/home/chucky/Backups/mcsai-remote/`.
-- Secrets only in `/home/chucky/.config/mcsai-backup/backup.conf` (mode `600`). Never print or commit. Repo copy: `scripts/mcsai-backup-remote.sh`.
-- Crontab (user `chucky`): `5 8,17 * * *` → `~/logs/mcsai-cron.log`.
-- Details: `docs/migration-chucky-notes.md` and `docs/chuck/SERVER-SETUP.md`.
-
 ## VPS access from chucky (SSH + limited sudo)
 
 - Prefer **`ssh dhaliora '…'`** for VPS work; use the local shell for chucky itself.
@@ -255,3 +258,27 @@ Slack slash `/new` often never reaches OpenClaw — use plain `reset`/`new`, or 
 
 Backup CLI (allowlisted): `/home/chucky/.local/bin/oc-reset-session --dm` or `--list` / `--key <key>`.
 Details: `memory/session-reset.md`.
+
+
+## Gmail auto-routing (HARD — no user keyword required)
+
+Email asks (search / labels / drafts / payments / unread / “busca en el correo”) **ALWAYS** use:
+
+```bash
+exec host=gateway
+/home/chucky/.local/bin/oc-gmail search "<query>" --limit N
+```
+
+Exact primary binary: **`/home/chucky/.local/bin/oc-gmail`** (subcommand `search` / `labels` / `drafts` / `payment-check`).
+
+### Must / must-not
+- **Do NOT** wait for the user to say “cursor”, “MCP”, or “use agent”. Route email via `oc-gmail` automatically.
+- **Do NOT** claim Gmail access works until `oc-gmail` has been run in this turn and succeeded.
+- If `oc-gmail` fails with OAuth / tokens missing: **one short Slack sentence** that auth is needed + the single reauth command below — no command dumps of failed searches.
+- Prefer working method: **`oc-gmail` REST** first. `oc-gmail-search` is only a thin alias → `oc-gmail search` (same tokens). Prefer documenting/calling **`oc-gmail search`**.
+- **Never invent** the binary name `oc-gmail-search` as a separate stack; if unsure, call `oc-gmail search`.
+- **Optional fallback only** if `oc-gmail` fails for a non-auth reason AND Cursor Gmail MCP is known working: `/home/chucky/.local/bin/oc-agent -p --approve-mcps --trust --force "…"`. Not for routine mail. Not instead of reauth when tokens are missing.
+- Slack style: no exec/path dumps; summarize results only.
+
+**Reauth (human, SSH to chucky):**
+`ssh -t chucky 'node /home/chucky/.cursor/gmail-oauth-login.js'`
