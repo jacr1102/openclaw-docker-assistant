@@ -37,6 +37,16 @@ Channel map for normal bugs/PRs (unchanged): `#mc-sai` → `mcsai`, `#dhaliora` 
 - **Cursor CLI**: **not** primary. Coding / heavy work only via **`oc-agent` / `oc-web`** (`exec host=gateway`). Plugin may stay installed but unused as `agents.defaults.model.primary`.
 - **One task at a time:** persist the plan in `memory/*.md`; after each task ask **¿sigo con la siguiente?**; each coding task = fresh `oc-agent -p` (no resume accumulation). See `memory/model-hybrid-setup.md`.
 
+
+## Long Cursor jobs (do not hold Slack turn)
+
+- **Do not** keep a multi-hour coding/plan job inline in the OpenClaw/Qwen Slack turn. `agents.defaults.timeoutSeconds` bounds the whole turn (currently 1800s); local Qwen still chokes on huge plans.
+- Full explanation: **`memory/agents-and-long-jobs.md`** (orchestrator vs worker, continue-loop, cron, `oc-long-job`).
+- **Preferred now:** persist checklist in `memory/*.md` → one short `oc-agent -p` → summarize → ask **¿sigo?** → next item.
+- **Background (Slack-safe):** `exec` → `/home/chucky/.local/bin/oc-long-job start -- "<plan or task>"` then poll `oc-long-job status <id>` / `log <id>`.
+- **Scheduled ticks:** `openclaw cron add --agent cron …` to pick the next checklist item and call `oc-agent`.
+- Raise `OC_AGENT_TIMEOUT` only for that `oc-agent` invocation when a single Cursor task needs longer than the wrapper default (600s); do not rely on stretching the OpenClaw turn to cover hours of Cursor work.
+
 ## Slack / WhatsApp session freeze recovery (self-serve)
 
 Sessions can still stick (pending exec approval, bad history, or a hung `oc-agent` exec). Corrupt Cursor CLI sessions (when used via exec) may fail with stream-json / “Something went wrong… use /new”.
@@ -55,6 +65,32 @@ WhatsApp (when linked): same — type `reset` or `new`.
 **Operator notes:** Avoid many parallel long coding tasks in Slack against the same workspace. Concurrent `oc-agent` / `cursor-agent` runs can still contend for disk/CPU. After a model-routing change, send **`reset`** or **`new`** once in Slack so the chat session picks up the new primary.
 
 
+## IRON RULE — Web / internet ONLY via `exec` → `oc-web` (never OpenClaw tool ids)
+
+**Root cause of `Unknown tool id: oc-web`:** the model called OpenClaw tool id `oc-web`. That id does **not** exist. `oc-web` is a **shell binary** invoked with the **`exec`** tool.
+
+### ALWAYS (web / internet / news / cartelera / precios / clima / current events / "busca en internet")
+
+```text
+exec host=gateway workdir=/home/chucky/.openclaw/workspace
+  /home/chucky/.local/bin/oc-web "<query>"
+```
+
+Equivalent (also OK): `exec` → `/home/chucky/.local/bin/oc-agent -p --approve-mcps --trust --force "Busca en la web: <query>. Resume fuentes y datos clave."`
+
+### NEVER
+
+- OpenClaw tool id / name **`oc-web`** (there is no such tool — use **`exec`**)
+- Native OpenClaw **`web_search`**, **`web_fetch`**, or **`browser`** (disabled / denied; broken or inventing)
+- Answering live facts from **Qwen alone** without successful `oc-web` / `oc-agent` stdout
+- Inventing showtimes, prices, news, weather, or "current" data
+
+### Failures
+
+- If `oc-web` / web `oc-agent` fails **twice** → tell the user briefly that web lookup failed. **Do not invent.**
+- Coding / plans / implementation → `oc-agent`; after each discrete task ask **¿sigo?**
+- Multi-hour work: see `memory/agents-and-long-jobs.md` (checklist loop, cron, or `oc-long-job`).
+
 ## Prefer fast tools + Cursor via exec (Qwen orchestrates)
 
 Delegate via **`exec host=gateway`**. **Never** use `~` paths. Prefer **`host=gateway`**; do not use disconnected `host=node`.
@@ -62,7 +98,7 @@ Delegate via **`exec host=gateway`**. **Never** use `~` paths. Prefer **`host=ga
 | Job | How |
 |-----|-----|
 | **Gmail** (labels / search / drafts / payment-check) | **ALWAYS** `/home/chucky/.local/bin/oc-gmail search "…" --limit N` via `exec host=gateway` (also `labels` / `drafts` / `payment-check`). Auto-route — user need **not** say “cursor”. **Never claim access** without a successful tool run. **Do not invent email contents** |
-| **Web / internet research** (news, cartelera, precios, clima, current events, "busca en internet/web") | **`/home/chucky/.local/bin/oc-web "…"`** (Cursor WebSearch/WebFetch via `oc-agent`). **Never invent** live data. **Do not** enable OpenClaw browser |
+| **Web / internet research** (news, cartelera, precios, clima, current events, "busca en internet/web") | **`exec`** → **`/home/chucky/.local/bin/oc-web "…"`** only. **Not** OpenClaw tool id `oc-web`. **Never** `web_search`/`browser`/Qwen invent |
 | Coding / multi-file edits / repo work | **`/home/chucky/.local/bin/oc-agent`** with **fresh** `-p --approve-mcps --trust --force "…"` per task (no resume). Not for routine Gmail or web search |
 | GitHub | `/usr/bin/gh` on chucky (already authenticated) |
 | VPS admin | `ssh dhaliora '…'` from chucky |
@@ -231,7 +267,7 @@ Add team conventions here as they stabilize (branch naming, review policy, Defin
 
 ## HARD RULE — never sudo for OpenClaw wrappers / MCP
 
-**Never** prefix `oc-agent`, `oc-gmail`, `oc-gmail-search`, `oc-gmail-agent`, `oc-web`, or `gh` with `sudo`.
+**Never** prefix `oc-agent`, `oc-gmail`, `oc-gmail-search`, `oc-gmail-agent`, `oc-web`, `oc-long-job`, or `gh` with `sudo`.
 **Never** use `sudo` for MCP / Cursor agent / Gmail / web / GitHub exec on chucky.
 
 - Allowlisted binary is `/home/chucky/.local/bin/oc-agent` (or bare `oc-agent`) — **not** `/usr/bin/sudo`.
@@ -274,7 +310,7 @@ Exact primary binary: **`/home/chucky/.local/bin/oc-gmail`** (subcommand `search
 - For Gmail ALWAYS: `exec host=gateway` → `/home/chucky/.local/bin/oc-gmail search "…" --limit N` (also `labels` / `drafts` / `payment-check`). Hard 120s timeout. **No “cursor” required.**
 - **Never claim Gmail access** without a successful `oc-gmail` run; on OAuth failure → one sentence + reauth command only.
 - Payments / admin / property asks: prefer `/home/chucky/.local/bin/oc-gmail payment-check` or `oc-gmail search --multi …` first; see **TOOLS.md**. Don't ask for aliases already in `USER.md`.
-- **Web / internet research ALWAYS:** for news, showtimes/cartelera, prices, weather, current events, or any "busca en internet/web" ask → `exec host=gateway` → `/home/chucky/.local/bin/oc-web "<query>"` (preferred) or `/home/chucky/.local/bin/oc-agent -p --approve-mcps --trust --force "Busca en la web: <query>. Resume fuentes y datos clave."`. Cursor does WebSearch/WebFetch; **OpenClaw only summarizes** tool output. **Never invent** live data from a generic cloud LLM. **Never** enable or use the OpenClaw `browser` plugin for this. Ask the user only if `oc-web`/`oc-agent` fails **twice**.
+- **Web / internet research ALWAYS:** for news, showtimes/cartelera, prices, weather, current events, or any "busca en internet/web" ask → **`exec` tool** (not tool id `oc-web`) → `/home/chucky/.local/bin/oc-web "<query>"` (preferred) or `/home/chucky/.local/bin/oc-agent -p --approve-mcps --trust --force "Busca en la web: <query>. Resume fuentes y datos clave."`. Cursor does WebSearch/WebFetch; **OpenClaw only summarizes** tool output. **Never invent** live data from Qwen. **Never** call OpenClaw tool ids `oc-web`, `web_search`, `web_fetch`, or `browser` (native web is disabled/denied). If `oc-web` fails **twice** → tell user briefly; do not invent.
 - For coding: `/home/chucky/.local/bin/oc-agent -p --approve-mcps --trust --force "…"`
 - **MCSAI live admin ALWAYS:** users/hours/activate via **`oc-agent --approve-mcps`** + workspace **`/home/chucky/.openclaw/workspace/repos/mcsai`** + MCP **`mcsai-observability`**. **Not** OS `useradd`/`sudo`, **not** `gh`.
 - **Never** route routine Gmail through Cursor `agent -p` / MCP (fallback only if `oc-gmail` fails non-auth). **Never** `~/.local/bin/agent`. **Never** `host=node`.

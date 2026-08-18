@@ -10,7 +10,7 @@ Skills describe generic behavior. This file is **our** specifics.
 
 ## HARD RULE — never sudo for OpenClaw wrappers / MCP
 
-**Never** prefix `oc-agent`, `oc-gmail`, `oc-gmail-search`, `oc-gmail-agent`, `oc-web`, or `gh` with `sudo`.
+**Never** prefix `oc-agent`, `oc-gmail`, `oc-gmail-search`, `oc-gmail-agent`, `oc-web`, `oc-long-job`, or `gh` with `sudo`.
 **Never** use `sudo` for MCP / Cursor agent / Gmail / web / GitHub exec on chucky.
 
 - Allowlisted binary is `/home/chucky/.local/bin/oc-agent` (or bare `oc-agent`) — **not** `/usr/bin/sudo`.
@@ -23,6 +23,27 @@ exec host=gateway workdir=/home/chucky/.openclaw/workspace/repos/mcsai
 ```
 
 VPS `sudo` over `ssh dhaliora` is separate and limited; do **not** allowlist local `sudo` on chucky.
+
+## IRON RULE — `oc-web` is a binary via `exec`, NOT an OpenClaw tool id
+
+Logs showed: `Unknown tool id: oc-web. Did you mean: web_fetch, web_search?`
+
+That means the model called tool **`oc-web`**. Wrong. Correct:
+
+```text
+# CORRECT — OpenClaw tool name is exec
+exec host=gateway workdir=/home/chucky/.openclaw/workspace
+  /home/chucky/.local/bin/oc-web "cartelera cine Bogotá hoy"
+
+# WRONG — there is no OpenClaw tool named oc-web
+tool_call id=oc-web ...
+# WRONG — native web_search/web_fetch/browser are disabled/denied on this gateway
+tool_call id=web_search ...
+```
+
+**ANY** web/internet/news/movie showtimes/prices/current events → ALWAYS the `exec` path above (or `oc-agent` with an explicit "Busca en la web…" prompt).
+**NEVER** answer from Qwen alone. **NEVER** use OpenClaw `web_search` / `web_fetch` / `browser`.
+If `oc-web` fails twice → tell the user briefly; do not invent.
 
 ## OpenClaw exec wrappers (preferred)
 
@@ -78,19 +99,33 @@ exec host=gateway workdir=/home/chucky/.openclaw/workspace/repos/mcsai
 - Workspace copy: `repos/mcsai/.cursor/mcp.json` (absolute `run-mcp.sh` path).
 - Read-only tools today include `users_list`, `users_show`, `hours_list`, `hours_show`, `hours_history`, plus telemetry/customers/activity. Prefer `per_page` (not `limit`).
 
-### Web search — Cursor agent (preferred)
+### Web search — Cursor agent ONLY (`exec` → binary)
 
 ```bash
+# MUST use OpenClaw tool: exec  (NOT tool id oc-web / web_search / browser)
 /home/chucky/.local/bin/oc-web "cartelera cine Bogotá hoy"
 /home/chucky/.local/bin/oc-web "clima Bogotá mañana"
 /home/chucky/.local/bin/oc-agent -p --approve-mcps --trust --force "Busca en la web: <query>. Resume fuentes y datos clave."
 ```
 
 - **ALWAYS** for internet/web research, news, showtimes/cartelera, prices, weather, current events, or "busca en internet/web".
-- Cursor agent uses **WebSearch** / **WebFetch**. OpenClaw’s job is only to **summarize** that output for Slack — never invent live facts from the chat model alone.
+- **`oc-web` is a shell wrapper** under `/home/chucky/.local/bin/oc-web` — invoke via **`exec host=gateway`**. Calling OpenClaw tool id `oc-web` yields `Unknown tool id: oc-web`.
+- Native OpenClaw **`web_search` / `web_fetch` / `browser`** are **disabled and denied** on this gateway — do not attempt them.
+- Cursor agent uses **WebSearch** / **WebFetch**. OpenClaw (Qwen) only **summarizes** stdout — never invent live facts.
 - Prefer **`oc-web`** (180s timeout + research prompt prefix). Equivalent: `oc-agent` with an explicit "Busca en la web…" prompt.
-- **Do not** enable or use the OpenClaw `browser` plugin for ordinary web lookups.
-- Ask the user only if the tool fails **twice** (timeouts/errors with no usable stdout).
+- If `oc-web` fails **twice** → tell the user briefly; **do not invent**.
+
+### Long background Cursor jobs — `oc-long-job`
+
+```bash
+/home/chucky/.local/bin/oc-long-job start -- "Implement X per memory/plan.md; stop after this task"
+/home/chucky/.local/bin/oc-long-job status <job-id>
+/home/chucky/.local/bin/oc-long-job log <job-id> --tail 80
+/home/chucky/.local/bin/oc-long-job list
+```
+
+- Starts `oc-agent -p` in the **background**; logs under `/home/chucky/logs/oc-jobs/`. Use so Slack turns stay short.
+- Details: `memory/agents-and-long-jobs.md`.
 
 ### Example exec patterns
 
@@ -111,9 +146,13 @@ exec host=gateway workdir=/home/chucky/.openclaw/workspace/repos/mcsai
 exec host=gateway workdir=/home/chucky/.openclaw/workspace
   /home/chucky/.local/bin/oc-agent -p --approve-mcps --trust --force "Summarize open PRs in jacr1102/mcsai using gh"
 
-# Web research (Cursor WebSearch/WebFetch)
+# Web research — CORRECT (tool=exec, binary=oc-web)
 exec host=gateway workdir=/home/chucky/.openclaw/workspace
   /home/chucky/.local/bin/oc-web "cartelera cine Bogotá hoy"
+# WRONG — never tool id oc-web / web_search / browser
+# Long job (background)
+exec host=gateway workdir=/home/chucky/.openclaw/workspace
+  /home/chucky/.local/bin/oc-long-job start -- "…"
 exec host=gateway workdir=/home/chucky/.openclaw/workspace
   /home/chucky/.local/bin/oc-agent -p --approve-mcps --trust --force "Busca en la web: clima Bogotá mañana. Resume fuentes y datos clave."
 

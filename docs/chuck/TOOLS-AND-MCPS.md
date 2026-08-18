@@ -29,7 +29,8 @@ Repo copies: [`agents/chuck/bin/`](../../agents/chuck/bin/).
 | Binary | Purpose |
 |--------|---------|
 | `oc-agent` | Coding / MCP via Cursor agent (`timeout` wrapper) |
-| `oc-web` | Web research prompt → `oc-agent` (WebSearch/WebFetch) |
+| `oc-web` | Web research prompt → `oc-agent` (WebSearch/WebFetch). Invoke via **exec**, never OpenClaw tool id `oc-web` |
+| `oc-long-job` | Background `oc-agent -p`; logs `~/logs/oc-jobs/`; start/status/log/list |
 | `oc-gmail` | Fast Gmail REST (Node `oc-gmail.mjs`) — preferred for Slack |
 | `oc-gmail-search` | Search helpers → `oc-gmail` |
 | `oc-gmail-agent` | Fallback: Cursor + Gmail MCP (slow; hard 120s) |

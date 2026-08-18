@@ -1,0 +1,171 @@
+#!/usr/bin/env bash
+# Start a background Cursor agent job without holding an OpenClaw Slack turn.
+# Safe/simple: only wraps oc-agent; no shell injection from job id; logs under ~/logs/oc-jobs.
+set -euo pipefail
+export HOME=/home/chucky
+export PATH="/home/chucky/.local/bin:/home/chucky/.nvm/versions/node/v24.19.0/bin:/usr/local/bin:/usr/bin:/bin:${PATH:-}"
+
+OC_AGENT="${OC_AGENT_WRAPPER:-/home/chucky/.local/bin/oc-agent}"
+LOG_ROOT="${OC_JOB_LOG_ROOT:-/home/chucky/logs/oc-jobs}"
+mkdir -p "$LOG_ROOT"
+
+usage() {
+  cat <<'USAGE' >&2
+Usage:
+  oc-long-job start [--workspace DIR] [--timeout SECS] -- <prompt...>
+  oc-long-job status <job-id>
+  oc-long-job log <job-id> [--tail N]
+  oc-long-job list
+
+Starts oc-agent -p in the background. Prints job id + log paths.
+Does NOT hold the Slack/OpenClaw turn.
+USAGE
+}
+
+cmd="${1:-}"
+if [[ -z "$cmd" ]]; then usage; exit 2; fi
+shift || true
+
+case "$cmd" in
+  list)
+    python3 - "$LOG_ROOT" <<'PY'
+import json, sys, glob, os
+root = sys.argv[1]
+files = sorted(glob.glob(os.path.join(root, "*.meta.json")), key=os.path.getmtime, reverse=True)
+if not files:
+    print("(no jobs)")
+    raise SystemExit(0)
+for m in files:
+    d = json.load(open(m))
+    prompt = (d.get("prompt") or "")[:60]
+    print(f"{d.get('id')}	{d.get('status')}	pid={d.get('pid')}	{d.get('startedAt')}	{prompt}")
+PY
+    exit 0
+    ;;
+  status)
+    id="${1:-}"
+    [[ -n "$id" ]] || { echo "job-id required" >&2; exit 2; }
+    meta="$LOG_ROOT/${id}.meta.json"
+    [[ -f "$meta" ]] || { echo "unknown job: $id" >&2; exit 1; }
+    python3 - "$meta" "$LOG_ROOT/${id}.pid" <<'PY'
+import json,os,sys
+meta=json.load(open(sys.argv[1]))
+pid_path=sys.argv[2]
+pid=meta.get("pid")
+running=False
+if pid:
+  try:
+    os.kill(int(pid), 0)
+    running=True
+  except ProcessLookupError:
+    running=False
+  except PermissionError:
+    running=True
+status="running" if running else ("done" if meta.get("exitCode") is not None else "unknown")
+if not running and meta.get("exitCode") is None and os.path.isfile(pid_path):
+  # finished but exit not recorded — check log footer later
+  status="exited"
+print(json.dumps({**meta, "status": status, "running": running}, indent=2))
+PY
+    exit 0
+    ;;
+  log)
+    id="${1:-}"
+    [[ -n "$id" ]] || { echo "job-id required" >&2; exit 2; }
+    shift || true
+    tail_n=80
+    if [[ "${1:-}" == "--tail" ]]; then tail_n="${2:-80}"; fi
+    logf="$LOG_ROOT/${id}.log"
+    [[ -f "$logf" ]] || { echo "no log for $id" >&2; exit 1; }
+    /usr/bin/tail -n "$tail_n" "$logf"
+    exit 0
+    ;;
+  start)
+    workspace=""
+    timeout_secs="${OC_LONG_JOB_TIMEOUT:-3600}"
+    while [[ $# -gt 0 ]]; do
+      case "$1" in
+        --workspace) workspace="$2"; shift 2 ;;
+        --timeout) timeout_secs="$2"; shift 2 ;;
+        --) shift; break ;;
+        -h|--help) usage; exit 0 ;;
+        *) break ;;
+      esac
+    done
+    if [[ "${1:-}" == "--" ]]; then shift; fi
+    if [[ $# -lt 1 ]]; then usage; exit 2; fi
+    prompt="$*"
+    id="$(date -u +%Y%m%dT%H%M%SZ)-$$"
+    logf="$LOG_ROOT/${id}.log"
+    meta="$LOG_ROOT/${id}.meta.json"
+    pidf="$LOG_ROOT/${id}.pid"
+    exitf="$LOG_ROOT/${id}.exit"
+
+    args=(-p --approve-mcps --trust --force)
+    if [[ -n "$workspace" ]]; then
+      args+=(--workspace "$workspace")
+    fi
+    args+=("$prompt")
+
+    export OC_AGENT_TIMEOUT="$timeout_secs"
+
+    # Record meta before start
+    python3 - "$meta" "$id" "$prompt" "$workspace" "$timeout_secs" "$logf" <<'PY'
+import json,sys,datetime
+meta, id_, prompt, workspace, timeout, logf = sys.argv[1:7]
+json.dump({
+  "id": id_,
+  "prompt": prompt,
+  "workspace": workspace or None,
+  "timeoutSecs": int(timeout),
+  "log": logf,
+  "startedAt": datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
+  "pid": None,
+  "exitCode": None,
+  "status": "starting",
+}, open(meta,"w"), indent=2)
+print(id_)
+PY
+
+    (
+      set +e
+      echo "=== oc-long-job $id start $(date -u +%Y-%m-%dT%H:%M:%SZ) ===" >>"$logf"
+      echo "timeout=${timeout_secs}s workspace=${workspace:-default}" >>"$logf"
+      echo "prompt: $prompt" >>"$logf"
+      echo "=== stdout/stderr ===" >>"$logf"
+      "$OC_AGENT" "${args[@]}" >>"$logf" 2>&1
+      ec=$?
+      echo "$ec" >"$exitf"
+      echo "=== exit $ec at $(date -u +%Y-%m-%dT%H:%M:%SZ) ===" >>"$logf"
+      python3 - "$meta" "$ec" <<'PY'
+import json,sys
+meta_path, ec = sys.argv[1], int(sys.argv[2])
+d=json.load(open(meta_path))
+d["exitCode"]=ec
+d["status"]="done" if ec==0 else "failed"
+d["finishedAt"]=__import__("datetime").datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+json.dump(d, open(meta_path,"w"), indent=2)
+PY
+    ) &
+    bg_pid=$!
+    echo "$bg_pid" >"$pidf"
+    python3 - "$meta" "$bg_pid" <<'PY'
+import json,sys
+meta_path, pid = sys.argv[1], int(sys.argv[2])
+d=json.load(open(meta_path))
+d["pid"]=pid
+d["status"]="running"
+json.dump(d, open(meta_path,"w"), indent=2)
+PY
+
+    echo "job_id=$id"
+    echo "pid=$bg_pid"
+    echo "log=$logf"
+    echo "meta=$meta"
+    echo "status_cmd=/home/chucky/.local/bin/oc-long-job status $id"
+    ;;
+  *)
+    usage
+    exit 2
+    ;;
+esac
