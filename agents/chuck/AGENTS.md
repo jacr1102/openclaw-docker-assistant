@@ -30,6 +30,20 @@ When the human pastes/attaches a **tech gate** and says things like **“trabaja
 Channel map for normal bugs/PRs (unchanged): `#mc-sai` → `mcsai`, `#dhaliora` → `digital-message-platform`.
 
 
+## Delivery loop (default multi-step Cursor work)
+
+For multi-step coding that is **not** a full tech gate (no GitHub Project/issues bootstrap), use **`skills/delivery-loop/SKILL.md`**.
+
+Triggers: **“empieza proyecto”**, **“delivery loop”**, **“plan e implementa punto por punto”**, **“trabaja por horas”**, long Cursor jobs.
+
+1. PLAN: one `oc-agent` → checklist in `memory/delivery-<slug>.md` (+ `memory/delivery-active.md`).
+2. DO: **exactly one** unchecked item per Slack turn / cron tick via fresh `oc-agent`; mark `[x]`; short Slack; ask **¿Sigo?** unless `auto_continue: true`.
+3. Qwen **never** implements code — always `/home/chucky/.local/bin/oc-agent -p --approve-mcps --trust --force` (and `--workspace` when known).
+4. Auto mode: user says **“activa auto_continue en el delivery”** (or edits the file). Cron **`delivery-loop-tick`** (30m → Jonathan DM) runs one item only when `auto_continue: true`.
+5. Status helper: `/home/chucky/.local/bin/oc-delivery-status`. Stuck → user sends **`reset`**.
+
+Tech-gate full delivery remains **`skills/tech-gate-delivery`**.
+
 ## Hybrid models + one-task workflow
 
 - **Chat primary (Slack / WhatsApp / `main`)**: **`ollama/qwen3.6:35b-a3b`** (local Ollama).
@@ -42,7 +56,7 @@ Channel map for normal bugs/PRs (unchanged): `#mc-sai` → `mcsai`, `#dhaliora` 
 
 - **Do not** keep a multi-hour coding/plan job inline in the OpenClaw/Qwen Slack turn. `agents.defaults.timeoutSeconds` bounds the whole turn (currently 1800s); local Qwen still chokes on huge plans.
 - Full explanation: **`memory/agents-and-long-jobs.md`** (orchestrator vs worker, continue-loop, cron, `oc-long-job`).
-- **Preferred now:** persist checklist in `memory/*.md` → one short `oc-agent -p` → summarize → ask **¿sigo?** → next item.
+- **Preferred now:** skill **`delivery-loop`** — checklist in `memory/delivery-*.md` → one short `oc-agent -p` → summarize → ask **¿sigo?** → next item (or cron when `auto_continue`).
 - **Background (Slack-safe):** `exec` → `/home/chucky/.local/bin/oc-long-job start -- "<plan or task>"` then poll `oc-long-job status <id>` / `log <id>`.
 - **Scheduled ticks:** `openclaw cron add --agent cron …` to pick the next checklist item and call `oc-agent`.
 - Raise `OC_AGENT_TIMEOUT` only for that `oc-agent` invocation when a single Cursor task needs longer than the wrapper default (600s); do not rely on stretching the OpenClaw turn to cover hours of Cursor work.

@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+# Print active delivery pointer + next unchecked checklist item (no secrets).
+set -euo pipefail
+export HOME=/home/chucky
+WS="${OC_WORKSPACE:-/home/chucky/.openclaw/workspace}"
+ACTIVE="$WS/memory/delivery-active.md"
+
+echo "=== delivery-active ==="
+if [[ ! -f "$ACTIVE" ]]; then
+  echo "(missing) $ACTIVE"
+  exit 0
+fi
+cat "$ACTIVE"
+echo
+
+rel="$(sed -n 's/^- \*\*File:\*\*[[:space:]]*//p' "$ACTIVE" | head -1 | tr -d '\r')"
+status="$(sed -n 's/^- \*\*Status:\*\*[[:space:]]*//p' "$ACTIVE" | head -1 | tr -d '\r')"
+echo "=== parse ==="
+echo "status: ${status:-unknown}"
+echo "file: ${rel:-none}"
+
+if [[ -z "${rel:-}" || "$rel" == "none" ]]; then
+  echo "=== next unchecked ==="
+  echo "(no active delivery file)"
+  exit 0
+fi
+
+if [[ "$rel" = /* ]]; then
+  DELIVERY="$rel"
+else
+  DELIVERY="$WS/$rel"
+fi
+
+echo
+echo "=== delivery file ==="
+if [[ ! -f "$DELIVERY" ]]; then
+  echo "(missing) $DELIVERY"
+  exit 0
+fi
+grep -E '^\- \*\*(Status|auto_continue|Repo|Workspace|Slack target|Updated|Active job):\*\*|^# ' "$DELIVERY" | head -20 || true
+echo
+pending=$(grep -cE '^\- \[ \] ' "$DELIVERY" || true)
+done_n=$(grep -cE '^\- \[x\] ' "$DELIVERY" || true)
+echo "checkbox_done: ${done_n:-0}"
+echo "checkbox_pending: ${pending:-0}"
+echo
+echo "=== next unchecked ==="
+grep -nE '^\- \[ \] ' "$DELIVERY" | head -1 || echo "(none — plan complete or empty)"

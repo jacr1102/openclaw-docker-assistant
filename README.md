@@ -13,7 +13,7 @@ Remote: [github.com/jacr1102/openclaw-docker-assistant](https://github.com/jacr1
 |---------------------|-----------|
 | Runbook de reinstalación + arquitectura | Este `README.md` |
 | Agent Chuck (AGENTS, TOOLS, skills, wrappers) | [`agents/chuck/`](./agents/chuck/) |
-| Guías operativas chucky | [`docs/chuck/`](./docs/chuck/) |
+| Guías operativas chucky | [`docs/chuck/`](./docs/chuck/) (incl. [DELIVERY-LOOP](./docs/chuck/DELIVERY-LOOP.md)) |
 | Inventario exportado (redactado) | [`docs/inventory/`](./docs/inventory/) |
 | Notas de cutover VPS → chucky | [`docs/migration-chucky-notes.md`](./docs/migration-chucky-notes.md) |
 | Scripts (backup, bootstrap, reset) | [`scripts/`](./scripts/) |
@@ -77,6 +77,7 @@ Cursor CLI **no** es el chat primario; coding/heavy vía `oc-agent` / `oc-web`. 
 | `gh` | GitHub CLI en chucky |
 | **mcsai-observability** MCP | Admin live MCSAI (vía `oc-agent --approve-mcps`) |
 | Gmail MCP | `~/.cursor` / `mcp-remote` path (OAuth local) |
+| **delivery-loop** skill + cron | Multi-step Cursor checklist; see [docs/chuck/DELIVERY-LOOP.md](./docs/chuck/DELIVERY-LOOP.md) |
 
 Inventario: [docs/chuck/TOOLS-AND-MCPS.md](./docs/chuck/TOOLS-AND-MCPS.md) · [docs/inventory/](./docs/inventory/)
 

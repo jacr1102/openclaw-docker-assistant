@@ -180,6 +180,16 @@ exec host=gateway workdir=/home/chucky/.openclaw/workspace
 - Coding/plans/reviews: `/home/chucky/.local/bin/oc-agent`. GitHub mutations: `/usr/bin/gh`.
 - Clone repos under `/home/chucky/.openclaw/workspace/repos/<repo>` when implementing (Dhaliora: `repos/digital-message-platform`).
 
+## Delivery loop
+
+- Skill: **`skills/delivery-loop/SKILL.md`** (+ `TEMPLATE.md`, `examples.md`).
+- **Default** for multi-step Cursor work (plan → one checkbox at a time). Tech gates still use **`tech-gate-delivery`**.
+- Progress: `memory/delivery-<slug>.md` + pointer `memory/delivery-active.md`.
+- Coding: `/home/chucky/.local/bin/oc-agent -p --approve-mcps --trust --force` (optional `--workspace`).
+- Status: `/home/chucky/.local/bin/oc-delivery-status`.
+- Auto: set `auto_continue: true` (“activa auto_continue en el delivery”). Cron **`delivery-loop-tick`** every 30m DMs Jonathan; implements only when auto is on.
+- Never dump exec/commands into Slack.
+
 ## Gmail (fast REST via `oc-gmail`)
 
 - **ALWAYS** `exec host=gateway` → `/home/chucky/.local/bin/oc-gmail search "<query>" --limit N` (also `labels` / `drafts` / `payment-check`). Never `~`, never `host=node`, never Cursor `agent -p` for routine mail.
