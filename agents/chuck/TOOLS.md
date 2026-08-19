@@ -6,8 +6,9 @@ Skills describe generic behavior. This file is **our** specifics.
 
 ## Exec allowlist auto-run
 
-**Exec approvals (2026-08-19):** `tools.exec.mode=allowlist` + host `ask=off` — allowlisted bins (`oc-*`, `gh`, etc.) auto-run via `exec host=gateway` with **no Slack Approve**; non-allowlisted commands are denied (no DM hang). Slack `execApprovals` disabled.
+**Exec approvals (2026-08-19):** `tools.exec.mode=allowlist` + host `ask=off` — allowlisted bins auto-run via `exec host=gateway` with **no Slack Approve**; misses are **denied** (no DM hang). Slack `execApprovals` disabled.
 
+Allowlist: `oc-*`/`gh` + shell/repo bins (`ls`,`cat`,`find`,`git`,`grep`,`sed`,`jq`,`bash`,…; coreutils realpaths). Every chain segment must match; `bash -lc` needs `bash`+inners. Denied: `sudo`,`rm`,`dd`. See `docs/chuck/EXEC-APPROVALS.md`.
 
 - Gateway runs **natively on chucky** — prefer **`exec` with `host=gateway`** (local).
 - **workdir** for approvals: **`/home/chucky/.openclaw/workspace`** (not `/home/node/...`).
@@ -31,9 +32,7 @@ VPS `sudo` over `ssh dhaliora` is separate and limited; do **not** allowlist loc
 
 ## IRON RULE — `oc-web` is a binary via `exec`, NOT an OpenClaw tool id
 
-Logs showed: `Unknown tool id: oc-web. Did you mean: web_fetch, web_search?`
-
-That means the model called tool **`oc-web`**. Wrong. Correct:
+Wrong tool id `oc-web` (use `exec`). Correct:
 
 ```text
 # CORRECT — OpenClaw tool name is exec
@@ -46,9 +45,8 @@ tool_call id=oc-web ...
 tool_call id=web_search ...
 ```
 
-**ANY** web/internet/news/movie showtimes/prices/current events → ALWAYS the `exec` path above (or `oc-agent` with an explicit "Busca en la web…" prompt).
-**NEVER** answer from Qwen alone. **NEVER** use OpenClaw `web_search` / `web_fetch` / `browser`.
-If `oc-web` fails twice → tell the user briefly; do not invent.
+**ANY** web/news/showtimes/prices/current events → `exec`→`oc-web` (or `oc-agent` "Busca en la web…"). Never Qwen-alone; never OpenClaw `web_search`/`web_fetch`/`browser`.
+If `oc-web` fails twice → brief user note; do not invent.
 
 ## OpenClaw exec wrappers (preferred)
 
@@ -68,7 +66,7 @@ If `oc-web` fails twice → tell the user briefly; do not invent.
 ```
 
 - Auto-route every email ask via `exec host=gateway` → **`oc-gmail`**. User does **not** need to say “cursor” / MCP.
-- **Never claim Gmail works** until this command succeeds. On OAuth/tokens missing: one Slack sentence + only `ssh -t chucky 'node /home/chucky/.cursor/gmail-oauth-login.js'`.
+- Never claim Gmail works until this succeeds. OAuth missing: one Slack sentence + `ssh -t chucky 'node /home/chucky/.cursor/gmail-oauth-login.js'`.
 - Implementation: `/home/chucky/.cursor/oc-gmail.mjs` + tokens `/home/chucky/.mcp-auth/mcp-remote-*/<hash>_tokens.json`. Hard **120s** timeout (~1–3s normal).
 - `oc-gmail-search` is a **thin alias** of `oc-gmail search` (same auth). Prefer **`oc-gmail search`** so the agent does not invent a separate broken tool.
 - Property/payment presets: `/home/chucky/.openclaw/workspace/gmail-aliases.json` (non-secret).
@@ -249,7 +247,6 @@ User-facing Slack replies must stay **concise** and **human**:
 
 (Internal operators still use the `exec host=gateway` patterns below — those are for the agent tool layer, not for Slack text.)
 
-
 ### Channel → default GitHub repo
 
 When the human is in one of these Slack channels (or clearly referring to it), use that repo for `gh` / bugs / PRs / tech-gate work **unless they name another repo**:
@@ -312,7 +309,6 @@ Slack slash `/new` often never reaches OpenClaw — use plain `reset`/`new`, or 
 
 Backup CLI (allowlisted): `/home/chucky/.local/bin/oc-reset-session --dm` or `--list` / `--key <key>`.
 Details: `memory/session-reset.md`.
-
 
 ## Gmail auto-routing (HARD — no user keyword required)
 
