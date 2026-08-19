@@ -4,6 +4,11 @@ This folder is home. Treat it that way.
 
 ## Runtime (native on chucky)
 
+## Exec allowlist auto-run
+
+**Exec approvals (2026-08-19):** `tools.exec.mode=allowlist` + host `ask=off` — allowlisted bins (`oc-*`, `gh`, etc.) auto-run via `exec host=gateway` with **no Slack Approve**; non-allowlisted commands are denied (no DM hang). Slack `execApprovals` disabled.
+
+
 - The OpenClaw **gateway runs natively on chucky** (systemd user unit `openclaw-gateway.service`), **not** in Docker.
 - Prefer **`exec` with `host=gateway`** (or local host) for almost all shell work.
 - **workdir** for exec approvals: **`/home/chucky/.openclaw/workspace`** (native path). Do **not** use Docker-era `/home/node/...`.
@@ -71,7 +76,7 @@ Sessions can still stick (pending exec approval, bad history, or a hung `oc-agen
 3. Optional if Slack app has `/openclaw` registered: `/openclaw /new` or `/openclaw /reset`.
 4. **`hola` alone does not clear a broken session.**
 5. In a channel: `@Chucky reset` (exact after mention strip). Prefer that over asking the LLM to “reset my DM”.
-6. If an **exec approval** is pending in DM, approve/deny it — otherwise that session stays blocked.
+6. Allowlisted exec no longer needs Slack Approve. If a session still looks stuck, reset it (`oc-reset-session`) rather than waiting on a DM approval.
 7. Backup (SSH / working chat exec): `/home/chucky/.local/bin/oc-reset-session --dm` (or `--key <sessionKey>`). See `memory/session-reset.md`.
 
 WhatsApp (when linked): same — type `reset` or `new`.
@@ -285,7 +290,7 @@ Add team conventions here as they stabilize (branch naming, review policy, Defin
 **Never** use `sudo` for MCP / Cursor agent / Gmail / web / GitHub exec on chucky.
 
 - Allowlisted binary is `/home/chucky/.local/bin/oc-agent` (or bare `oc-agent`) — **not** `/usr/bin/sudo`.
-- `sudo …` misses the exec allowlist → Slack approval required → often `initiating-platform-disabled` / stuck.
+- `sudo …` misses the exec allowlist → **denied** (no Slack Approve hang). Never use local `sudo` for allowlisted tools.
 - Correct pattern (MCSAI observability):
 
 ```bash

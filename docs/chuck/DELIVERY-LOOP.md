@@ -37,7 +37,7 @@ Disable / pause: `Pausa el delivery` / `Desactiva auto_continue`
 
 **Idle must produce zero Slack messages and zero exec-approval prompts.**
 
-OpenClaw job `delivery-loop-tick` is **disabled by default** (it woke the LLM every 30m; with `tools.exec.mode=ask` + Slack `execApprovals`, even a `cat` of `delivery-active.md` spammed DMs).
+OpenClaw job `delivery-loop-tick` is **disabled by default** (it woke the LLM every 30m; with the old `tools.exec.mode=ask` + Slack `execApprovals`, even a `cat` of `delivery-active.md` spammed DMs). As of 2026-08-19, chucky uses `mode=allowlist` + host `ask=off` so allowlisted `oc-delivery-*` auto-run without Approve.
 
 **Live path:** user crontab on chucky:
 

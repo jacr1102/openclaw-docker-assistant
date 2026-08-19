@@ -25,7 +25,7 @@ Optional if the Slack app registered `/openclaw`:
 
 In a channel: `@Chucky reset` (exact token after mention strip).
 
-**`hola` alone does not reset.** If an **exec approval** is pending in DM, approve or deny it or the session stays blocked.
+**`hola` alone does not reset.** Allowlisted exec no longer needs Slack Approve (`tools.exec.mode=allowlist`, host `ask=off`). If a session still looks stuck, use `oc-reset-session` rather than waiting on a DM approval.
 
 WhatsApp (when linked): same — type `reset` or `new`.
 

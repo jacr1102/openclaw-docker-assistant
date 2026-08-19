@@ -4,6 +4,11 @@ Skills describe generic behavior. This file is **our** specifics.
 
 ## Exec defaults (native gateway on chucky)
 
+## Exec allowlist auto-run
+
+**Exec approvals (2026-08-19):** `tools.exec.mode=allowlist` + host `ask=off` — allowlisted bins (`oc-*`, `gh`, etc.) auto-run via `exec host=gateway` with **no Slack Approve**; non-allowlisted commands are denied (no DM hang). Slack `execApprovals` disabled.
+
+
 - Gateway runs **natively on chucky** — prefer **`exec` with `host=gateway`** (local).
 - **workdir** for approvals: **`/home/chucky/.openclaw/workspace`** (not `/home/node/...`).
 - Hosts: **chucky** = local; **dhaliora / VPS / server2** = VPS via `ssh dhaliora`.
@@ -14,7 +19,7 @@ Skills describe generic behavior. This file is **our** specifics.
 **Never** use `sudo` for MCP / Cursor agent / Gmail / web / GitHub exec on chucky.
 
 - Allowlisted binary is `/home/chucky/.local/bin/oc-agent` (or bare `oc-agent`) — **not** `/usr/bin/sudo`.
-- `sudo …` misses the exec allowlist → Slack approval required → often `initiating-platform-disabled` / stuck.
+- `sudo …` misses the exec allowlist → **denied** (no Slack Approve hang). Never use local `sudo` for allowlisted tools.
 - Correct pattern (MCSAI observability):
 
 ```bash

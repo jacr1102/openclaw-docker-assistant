@@ -49,7 +49,7 @@ Cutover history and rollback: [`docs/migration-chucky-notes.md`](../migration-ch
 
 - `gateway.mode=local`, `gateway.bind=lan`, `gateway.port=18789`
 - `gateway.controlUi.allowedOrigins` includes `https://assistant.dhalia.fun`
-- `tools.exec.host=gateway`, `tools.exec.mode=ask` (approvals)
+- `tools.exec.host=gateway`, `tools.exec.mode=allowlist` (allowlisted bins auto-run; no Slack Approve). Host approvals: `ask=off`. Slack `channels.slack.execApprovals.enabled=false`.
 - `session.resetTriggers`: `/new`, `/reset`, `new`, `reset`
 
 Inventory snapshot: [`docs/inventory/systemd.md`](../inventory/systemd.md), [`docs/inventory/openclaw.config.redacted.md`](../inventory/openclaw.config.redacted.md).
