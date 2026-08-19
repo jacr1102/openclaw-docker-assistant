@@ -33,18 +33,44 @@ Enable:
 
 Disable / pause: `Pausa el delivery` / `Desactiva auto_continue`
 
-## Cron: `delivery-loop-tick`
+## Progress cron (no Slack spam when idle)
 
-- Every **30m**, agent **`cron`**, isolated session  
-- Announces to Jonathan Slack DM (`user:UGN9SRK24`) with `--best-effort-deliver`  
-- If no active/running delivery → `NO_REPLY`  
-- If `auto_continue: true` → runs **one** `oc-agent` item and DMs short progress  
-- If `auto_continue: false` → status-only (“N pending; waiting for you to say sigue”) — no `oc-agent`
+**Idle must produce zero Slack messages and zero exec-approval prompts.**
+
+OpenClaw job `delivery-loop-tick` is **disabled by default** (it woke the LLM every 30m; with `tools.exec.mode=ask` + Slack `execApprovals`, even a `cat` of `delivery-active.md` spammed DMs).
+
+**Live path:** user crontab on chucky:
+
+```cron
+*/30 * * * * /home/chucky/.local/bin/oc-delivery-cron.sh >> ~/logs/delivery-cron.log 2>&1
+```
+
+Flow:
+
+1. `oc-delivery-tick` reads `memory/delivery-active.md` (+ delivery file) in bash — **no LLM, no Slack**.
+2. If `kind=idle` (Status none/paused/done, or File none) → **exit 0 silently**.
+3. If `kind=status` or `kind=work` → wake `openclaw agent --agent cron` once (deliver to Slack DM).
+
+When woken:
+
+- `auto_continue: true` → run **one** `oc-agent` item and DM short progress  
+- `auto_continue: false` + running → status-only (“N pending; waiting for you to say sigue”)  
+- checklist empty → mark done / clear active pointer
+
+### Re-enable auto progress later
+
+1. Keep the **system crontab** (preferred) — it already gates on idle.
+2. Set delivery `auto_continue: true` and Status `running` (Slack: **activa auto_continue en el delivery**).
+3. Optional: re-enable OpenClaw cron only after cron-agent allowlist includes `oc-delivery-*` / helpers:
+   `openclaw cron enable c736b205-81ce-4400-a58f-a4a0c2afff28`  
+   Prefer leaving it disabled and relying on `oc-delivery-cron.sh`.
 
 ## Helpers
 
 ```bash
-/home/chucky/.local/bin/oc-delivery-status
+/home/chucky/.local/bin/oc-delivery-status   # human-readable dump
+/home/chucky/.local/bin/oc-delivery-tick     # idle|status|work classifier
+/home/chucky/.local/bin/oc-delivery-cron.sh  # crontab entrypoint
 ```
 
 Coding always:

@@ -50,7 +50,7 @@ English:
 
 4. **Phase DO:** each Slack turn (or cron tick) does **exactly ONE** unchecked item via a **fresh** `oc-agent`; mark it `[x]`; post a **short** Slack summary (no exec dumps / no command lines); then ask **¿Sigo con el siguiente?** **unless** `auto_continue: true` in the delivery file header.
 
-5. If the user says keep going / auto: continue the next item in the **same** turn **only** if the previous `oc-agent` finished quickly; otherwise prefer **cron** (`delivery-loop-tick`) or `/home/chucky/.local/bin/oc-long-job` for heavy items.
+5. If the user says keep going / auto: continue the next item in the **same** turn **only** if the previous `oc-agent` finished quickly; otherwise prefer **cron** (`oc-delivery-cron.sh` / tick) or `/home/chucky/.local/bin/oc-long-job` for heavy items.
 
 6. **Web research:** `oc-web` only (via `exec`).
 
@@ -81,7 +81,7 @@ English:
 4. On success: mark `- [x]`, append a one-line Log entry, bump **Updated**.
 5. Slack: what was done + how many `[ ]` remain.
 6. If `auto_continue: false` → ask **¿Sigo con el siguiente?**
-7. If `auto_continue: true` → may start the next item in-turn only if the last `oc-agent` was quick; else stop and let cron/`oc-long-job` continue.
+7. If `auto_continue: true` → may start the next item in-turn only if the last `oc-agent` was quick; else stop and let `oc-delivery-cron.sh` / `oc-long-job` continue.
 
 When no `[ ]` remain: set status `done`, set `delivery-active` status to `none`, Slack “Delivery complete”.
 
@@ -92,7 +92,7 @@ When no `[ ]` remain: set status `done`, set `delivery-active` status to `none`,
 - Default: `auto_continue: false` (ask after each item).
 - Enable: user says **“activa auto_continue en el delivery”** (or edits the file header to `auto_continue: true`).
 - Disable: **“pausa el delivery”** / set `auto_continue: false` or status `paused`.
-- Cron job **`delivery-loop-tick`** (every 30m → Jonathan DM): runs one item **only** when status is `running` **and** `auto_continue: true`. Otherwise status-only or `NO_REPLY`.
+- Progress tick: **system crontab** `oc-delivery-cron.sh` every 30m. Bash `oc-delivery-tick` exits silently when idle (no Slack / no approvals). Agent wakes only for `status`/`work`. With `auto_continue: true` runs one item; otherwise status-only. OpenClaw cron `delivery-loop-tick` stays **disabled** to avoid idle approval spam.
 
 ---
 
