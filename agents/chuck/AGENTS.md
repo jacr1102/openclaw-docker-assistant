@@ -4,9 +4,18 @@ This folder is home. Treat it that way.
 
 ## Runtime (native on chucky)
 
-## Exec allowlist auto-run
+## Exec policy (main = full)
 
-**Exec approvals (2026-08-19):** `tools.exec.mode=allowlist` + host `ask=off` — allowlisted bins (`oc-*`, `gh`, etc.) auto-run via `exec host=gateway` with **no Slack Approve**; non-allowlisted commands are denied (no DM hang). Slack `execApprovals` disabled.
+**Exec approvals (2026-08-19 update):** agent **`main`** uses `tools.exec.mode=full` + approvals `security=full` / `ask=off` on `host=gateway` — exec auto-runs with **no Slack Approve** and **no allowlist miss hangs**. Agent **`cron`** stays `allowlist`. Slack `execApprovals` disabled.
+
+### IRON RULE — `exec.command` is a real shell command (never English)
+
+The allowlist/analyzer matches **argv0 / resolved binary paths**, not prose. Natural-language “commands” fail (and `->` is parsed as a **redirect** → hard miss even under allowlist).
+
+- **ALWAYS** pass real argv, e.g. `/bin/ls /home/chucky/.openclaw/workspace/memory` or `/home/chucky/.local/bin/oc-agent -p …`
+- **NEVER** put English in `command`, e.g. `list files in ~/.openclaw/… -> show first 30 lines`
+- **Avoid shell redirects** in exec (`2>/dev/null`, `>`, `>>`, `->`) when possible — on OpenClaw 2026.7.1-2 they are **unanalyzable** under allowlist mode (cron). Prefer `/bin/ls … | /usr/bin/head -5` without redirects, or native file tools.
+- For workspace/memory listing/reading: prefer native tools **`read`**, **`memory_get`**, **`memory_search`** (bypass exec). Use exec only when you need a shell binary.
 
 
 - The OpenClaw **gateway runs natively on chucky** (systemd user unit `openclaw-gateway.service`), **not** in Docker.

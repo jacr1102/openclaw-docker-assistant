@@ -2,22 +2,33 @@
 
 ## Policy
 
-- `tools.exec.mode=allowlist` → allowlisted/safe-bin commands run with **no prompt**; everything else is **denied** (no Slack DM hang).
-- Host `~/.openclaw/exec-approvals.json`: `defaults.ask=off`, `askFallback=deny`, `security=allowlist` (same for agents `main` and `cron`).
-- `channels.slack.execApprovals.enabled=false` so approval DMs do not park sessions for 5–30 minutes.
+| Agent | `tools.exec.mode` | Approvals `security` | Behavior |
+|-------|-------------------|----------------------|----------|
+| **main** | `full` | `full` (`ask=off`) | Exec on `host=gateway` auto-runs — **no Approve DM**, **no allowlist miss** |
+| **cron** | `allowlist` | `allowlist` (`ask=off`) | Only allowlisted bins; misses **denied** (no hang) |
+| Global default | `allowlist` | defaults `allowlist` | Stricter of config + `~/.openclaw/exec-approvals.json` wins (`minSecurity`) |
 
-## Allowlisted daily bins
+- Host file: `~/.openclaw/exec-approvals.json`
+- `channels.slack.execApprovals.enabled=false` so approval DMs do not park sessions.
 
-`oc-agent`, `oc-web`, `oc-gmail`, `oc-gmail-search`, `oc-gmail-agent`, `oc-long-job`, `oc-delivery-status`, `oc-delivery-tick`, `oc-delivery-cron.sh`, `gh` (plus absolute paths under `/home/chucky/.local/bin/` and `/usr/bin/gh`, and globs `oc-*` / `/home/chucky/.local/bin/oc-*`).
+### Risk (main = full)
 
-## How ask vs auto works
+`main` can run **any** gateway-host command the model puts in `exec.command` (as user `chucky`). Prefer native `read` / `memory_*` for files; keep dangerous ops out of prompts. Cron stays locked to the allowlist.
 
-| Mode | Allowlist hit | Miss |
-|------|---------------|------|
-| `allowlist` (current) | auto-run | deny (no Ask) |
-| `ask` (previous) | auto-run | Slack Approve DM (hangs) |
-| `full` | auto-run | auto-run (unrestricted) |
+## Why allowlist was failing (2026.7.1-2)
 
-Shell chains (`cd … && cmd`) still need **every** top-level segment allowlisted.
+OpenClaw matches **resolved executables per pipeline segment**, not free text:
 
-Backups on host: `~/.openclaw/*.bak-before-exec-allowlist-auto-*`.
+1. **Natural language** in `command` (e.g. `list files in ~/.openclaw/workspace/memory/ -> show first 30 lines`) — first token is `list` (not a binary); `->` is treated as a **redirect**.
+2. **Redirects** (`2>/dev/null`, `>`, `>>`, `->`) set `authorizationPlan.reason=redirect` → `analysisOk=false` → **`exec denied: allowlist miss` before allowlist patterns apply**. A `*` pattern does **not** help.
+3. Clean argv works under allowlist, e.g. `/bin/ls … | head -5` or `/home/chucky/.local/bin/oc-agent …` (on Ubuntu, `/usr/bin/ls` often realpaths to `/usr/lib/cargo/bin/coreutils/ls`).
+
+Gateway logs redact `command`; recover argv from agent session/trajectory JSONL.
+
+## Agent rules
+
+See workspace `AGENTS.md`: real shell argv only; prefer `read` / `memory_get` / `memory_search` for memory listing; avoid redirects on cron/allowlist paths.
+
+## Backups
+
+Host: `~/.openclaw/*.bak-before-exec-full-*` (and earlier `*.bak-before-exec-allowlist-*`).
